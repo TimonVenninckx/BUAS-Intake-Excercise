@@ -5,12 +5,17 @@
 #include "TextureLoader.h"
 
 
-void PhysicsBody::initialize(float density, bool isStatic, float restitution)
+void PhysicsBody::initialize(float density, bool isStatic, float restitution, float dynamicFriction, float staticFriction)
 {
-
+	this->dynamicFriction = dynamicFriction;
+	this->staticFriction = staticFriction;
+	if (dynamicFriction > staticFriction) {
+		std::cout << "ERROR DYNAMIC FRICTION IS MORE THEN STATIC FRICTION\n";
+		dynamicFriction = staticFriction;
+	}
 
 	this->density = density;
-	this->restitution = restitution;
+	this->restitution = std::clamp(restitution,0.f,1.f);
 	this->isStatic = isStatic;
 
 	sf::Vector2f center = this->shape->getGeometricCenter();
@@ -33,13 +38,13 @@ void PhysicsBody::initialize(float density, bool isStatic, float restitution)
 
 	this->angularVelocity = 0.f;
 
+
 	this->aabbUpdateRequired = true;
-	std::cout << ineratia << " is the inertia" << '\n';
 }
 
 
 // box creation
-PhysicsBody::PhysicsBody(float width, float height, float density, bool isStatic, float restitution)
+PhysicsBody::PhysicsBody(float width, float height, float density, bool isStatic, float restitution, float dynamicFriction, float staticFriction)
 {
 	this->width = width;
 	this->height = height;
@@ -47,7 +52,7 @@ PhysicsBody::PhysicsBody(float width, float height, float density, bool isStatic
 	this->area = width * height;
 	this->shape = new sf::RectangleShape({ width,height });
 
-	this->initialize(density, isStatic, restitution);
+	this->initialize(density, isStatic, restitution,dynamicFriction,staticFriction);
 
 
 	// loading amount of vertices on creation.
@@ -63,14 +68,14 @@ PhysicsBody::PhysicsBody(float width, float height, float density, bool isStatic
 }
 
 // circle creation
-PhysicsBody::PhysicsBody(float radius,float density, bool isStatic, float restitution)
+PhysicsBody::PhysicsBody(float radius,float density, bool isStatic, float restitution, float dynamicFriction, float staticFriction)
 {
 	this->shapeType = ShapeType::Circle;
 	this->radius = radius;
 	this->area = radius * radius * M_PI;
 	this->shape = new sf::CircleShape(radius);
 
-	this->initialize(density, isStatic, restitution);
+	this->initialize(density, isStatic, restitution,dynamicFriction,staticFriction);
 
 	sf::Texture* texture = TextureLoader::LoadTexture("smiley.png");
 	this->shape->setTexture(texture);
@@ -258,6 +263,16 @@ AABB PhysicsBody::getAABB()
 		aabbUpdateRequired = false;
 	}
 	return this->aabb;
+}
+
+float PhysicsBody::getStaticFriction()
+{
+	return this->staticFriction;
+}
+
+float PhysicsBody::getDynamicFriction()
+{
+	return this->dynamicFriction;
 }
 
 

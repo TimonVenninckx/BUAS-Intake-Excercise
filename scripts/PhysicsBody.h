@@ -12,17 +12,17 @@ class PhysicsBody
 {
 
 	// general initialize function used by both constructors
-	void initialize(float density, bool isStatic, float restitution);
+	void initialize(float density, bool isStatic, float restitution, float dynamicFriction, float staticFriction);
 
 public:
 
 	PhysicsBody(PhysicsBody&) = delete;
 
 	// CIRCLE CONSTRUCTOR
-	PhysicsBody(float radius,float density, bool isStatic, float restitution);
+	PhysicsBody(float radius,float density, bool isStatic, float restitution, float dynamicFriction, float staticFriction);
 
 	// CUBE CONSTRUCTOR
-	PhysicsBody(float width, float height, float density, bool isStatic, float restitution);
+	PhysicsBody(float width, float height, float density, bool isStatic, float restitution, float dynamicFriction, float staticFriction);
 	~PhysicsBody(); 
 
 	float calculateRotationalInertia();
@@ -55,6 +55,9 @@ public:
 	void setAngularVelocity(float value);
 	float getInverseInertia();
 	AABB getAABB();
+
+	float getStaticFriction();
+	float getDynamicFriction();
 
 	float angularVelocity{};
 

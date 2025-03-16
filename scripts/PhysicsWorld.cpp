@@ -1,6 +1,7 @@
 #include "PhysicsWorld.h"
 #include <iostream>
 #include "AABB.h"
+#include "PhysicsMath.h"
 
 
 const float PhysicsWorld::minBodySize{ 0.01f * 0.01f };
@@ -103,7 +104,7 @@ void PhysicsWorld::narrowPhase() {
 
             Collision::ContactResult cr = Collision::findContactPoints(bodyA, bodyB);
             Collision::Manifold contact(bodyA, bodyB, result.normal, result.depth, cr.contact1, cr.contact2, cr.contactCount);
-            this->resolveCollisionWithRotation(contact);
+            this->resolveCollisionWithRotationAndFriction(contact);
 
 
             #define debugging
@@ -268,24 +269,162 @@ void PhysicsWorld::resolveCollisionWithRotation(const Collision::Manifold& conta
     //std::cout << "B angular: " << bodyB->angularVelocity << '\n';
 }
 
+void PhysicsWorld::resolveCollisionWithRotationAndFriction(const Collision::Manifold& contact) {
 
+    PhysicsBody* bodyA = contact.bodyA;
+    PhysicsBody* bodyB = contact.bodyB;
+
+    sf::Vector2f normal = contact.normal;
+    sf::Vector2f contact1 = contact.contact1;
+    sf::Vector2f contact2 = contact.contact2;
+
+    int contactCount = contact.contactCount;
+
+    float e = std::min(bodyA->getRestitution(), bodyB->getRestitution());
+
+    float sf = (bodyA->getStaticFriction() * bodyB->getStaticFriction()) * 0.5f;
+    float df = (bodyA->getDynamicFriction() * bodyB->getDynamicFriction()) * 0.5f;
+
+    // all static so we dont allocate them every function call
+    static std::array<sf::Vector2f, 2> contactList{};
+    static std::array<sf::Vector2f, 2> impulseList{};
+    static std::array<sf::Vector2f, 2> frictionImpulseList{};
+    static std::array<sf::Vector2f, 2> raList{};
+    static std::array<sf::Vector2f, 2> rbList{};
+    static std::array<float, 2> jList{};
+
+    contactList[0] = contact1;
+    contactList[1] = contact2;
+    for (unsigned int i{ 0 }; i < 2; i++) {
+        frictionImpulseList[i] = zeroVector;
+        impulseList[i] = zeroVector;
+        jList[i] = 0.f;
+    }
+
+
+    // first 2 loops
+    for (unsigned int i{ 0 }; i < contactCount; i++) {
+        sf::Vector2f ra = contactList[i] - bodyA->getPosition();
+        sf::Vector2f rb = contactList[i] - bodyB->getPosition();
+
+        raList[i] = ra;
+        rbList[i] = rb;
+
+        sf::Vector2f raPerp = { -ra.y,ra.x };
+        sf::Vector2f rbPerp = { -rb.y,rb.x };
+
+        sf::Vector2f angularLinearVelocityA = raPerp * bodyA->angularVelocity;
+        sf::Vector2f angularLinearVelocityB = rbPerp * bodyB->angularVelocity;
+
+        sf::Vector2f relativeVelocity =
+            (bodyB->linearVelocity + angularLinearVelocityB) -
+            (bodyA->linearVelocity + angularLinearVelocityA);
+
+        float contactVelocityMag = relativeVelocity.dot(normal);
+
+        // if already moveing apart not necessary 
+        // negative dot product means pointing the opposite way
+        if (contactVelocityMag > 0.f)
+            continue;
+
+        float raPerpDotN = raPerp.dot(normal);
+        float rbPerpDotN = rbPerp.dot(normal);
+
+        float denom = bodyA->getInverseMass() + bodyB->getInverseMass() +
+            (raPerpDotN * raPerpDotN) * bodyA->getInverseInertia() +
+            (rbPerpDotN * rbPerpDotN) * bodyB->getInverseInertia();
+
+        float j = -(1.f + e) * contactVelocityMag;
+        j /= denom;
+        j /= static_cast<float>(contactCount);
+
+        jList[i] = j;
+
+        sf::Vector2f impulse = j * normal;
+        impulseList[i] = impulse;
+    }
+
+    // NOW WE CALCULATE THE FRICTION
+
+    for (unsigned int i{ 0 }; i < contactCount; i++) {
+        sf::Vector2f impulse = impulseList[i];
+        //std::cout << "Impulse:" << impulse.x << ',' << impulse.y << '\n';
+
+        // ANGULAR VELOCITY ON A IS NORMAL AND B IS NEGATIVE BECAUSE ROTATION WORKS DIFFERENTLY IN SFML
+        bodyA->linearVelocity += bodyA->getInverseMass() * -impulse;
+        bodyA->angularVelocity += (impulse.cross(raList[i]) * bodyA->getInverseInertia());
+        bodyB->linearVelocity += bodyB->getInverseMass() * impulse;
+        bodyB->angularVelocity += (-impulse.cross(rbList[i]) * bodyB->getInverseInertia());
+    }
+
+    for (unsigned int i{ 0 }; i < contactCount; i++) {
+        sf::Vector2f ra = contactList[i] - bodyA->getPosition();
+        sf::Vector2f rb = contactList[i] - bodyB->getPosition();
+
+        raList[i] = ra;
+        rbList[i] = rb;
+
+        sf::Vector2f raPerp = { -ra.y,ra.x };
+        sf::Vector2f rbPerp = { -rb.y,rb.x };
+
+        sf::Vector2f angularLinearVelocityA = raPerp * bodyA->angularVelocity;
+        sf::Vector2f angularLinearVelocityB = rbPerp * bodyB->angularVelocity;
+
+        sf::Vector2f relativeVelocity =
+            (bodyB->linearVelocity + angularLinearVelocityB) -
+            (bodyA->linearVelocity + angularLinearVelocityA);
+
+        sf::Vector2f tangent = relativeVelocity - relativeVelocity.dot(normal) * normal;
+
+        if (PhysicsMath::nearlyEqual(tangent, zeroVector)) {
+            continue;
+        }
+        else {
+            tangent = tangent.normalized();
+        }
+
+        float raPerpDotT = raPerp.dot(tangent);
+        float rbPerpDotT = rbPerp.dot(tangent);
+
+        float denom = bodyA->getInverseMass() + bodyB->getInverseMass() +
+            (raPerpDotT * raPerpDotT) * bodyA->getInverseInertia() +
+            (rbPerpDotT * rbPerpDotT) * bodyB->getInverseInertia();
+
+        float jt = -relativeVelocity.dot(tangent);
+        jt /= denom;
+        jt /= static_cast<float>(contactCount);
+
+        float j = jList[i];
+        sf::Vector2f frictionImpulse;
+        if (std::abs(jt) <= j * sf) {
+            frictionImpulse = jt * tangent;
+        }
+        else {
+            frictionImpulse = -j * tangent * df;
+        }
+        frictionImpulseList[i] = frictionImpulse;
+    }
+
+    for (unsigned int i{ 0 }; i < contactCount; i++) {
+        sf::Vector2f frictionImpulse = frictionImpulseList[i];
+        //std::cout << "Impulse:" << impulse.x << ',' << impulse.y << '\n';
+
+        // ANGULAR VELOCITY ON A IS NORMAL AND B IS NEGATIVE BECAUSE ROTATION WORKS DIFFERENTLY IN SFML
+        bodyA->linearVelocity += bodyA->getInverseMass() * -frictionImpulse;
+        bodyA->angularVelocity += (frictionImpulse.cross(raList[i]) * bodyA->getInverseInertia());
+        bodyB->linearVelocity += bodyB->getInverseMass() * frictionImpulse;
+        bodyB->angularVelocity += (-frictionImpulse.cross(rbList[i]) * bodyB->getInverseInertia());
+    }
+
+    //std::cout << "A angular: " << bodyA->angularVelocity << '\n';
+    //std::cout << "B angular: " << bodyB->angularVelocity << '\n';
+}
 
 
 unsigned int PhysicsWorld::getBodyCount() const
 {
     return bodylist.size();
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

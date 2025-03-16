@@ -16,7 +16,7 @@ Game::Game()
 
     window.setView(view);
 
-    window.setFramerateLimit(30);
+    window.setFramerateLimit(120);
 
     float left = 0.f - viewSize.x / 2.f;
     float right = viewSize.x / 2.f;
@@ -62,14 +62,14 @@ Game::Game()
     
 
     // bottom bar
-    PhysicsBody* body = new PhysicsBody{ right - left - padding * 2,3.f,1.f,true,0.5f };
+    PhysicsBody* body = new PhysicsBody{ right - left - padding * 2,3.f ,.3f,true,0.4f,1.f,1.f };
     body->moveTo(sf::Vector2f(0.f, -12.f));
     body->setColor(sf::Color::White);
     //body->setColor(sf::Color(std::rand() % 255, std::rand() % 255, std::rand() % 255));
     world.addBody(body);
 
     // left ledge
-    PhysicsBody* ledge1 = new PhysicsBody{ 25.f,2.f,1.f,true,0.5f };
+    PhysicsBody* ledge1 = new PhysicsBody{ 25.f,2.f,1.f,true,0.4f,0.f,0.0f };
     ledge1->moveTo(sf::Vector2f(-14.f, 5.f));
     ledge1->rotate(-M_PI * 2.f / 20.f);
     ledge1->setColor(sf::Color::White);
@@ -77,7 +77,7 @@ Game::Game()
     world.addBody(ledge1);
 
     // right ledge
-    PhysicsBody* ledge2 = new PhysicsBody{ 25.f,2.f,1.f,true,0.5f };
+    PhysicsBody* ledge2 = new PhysicsBody{ 25.f,2.f,1.f,true,0.4f,1.f,1.f };
     ledge2->moveTo(sf::Vector2f(14.f, 15.f));
     ledge2->rotate(M_PI * 0.1f);
     ledge2->setColor(sf::Color::White);
@@ -160,7 +160,7 @@ void Game::update(float delta)
                 size.x = (std::rand() % 11) / 10.f + 2.0f;
                 size.y = (std::rand() % 11) / 10.f + 2.0f;
 
-                PhysicsBody* body = new PhysicsBody{ size.x,size.y,1.f,false,0.5f };
+                PhysicsBody* body = new PhysicsBody{ size.x,size.y,1.f,false,0.5f,0.4f,0.6f };
                 body->moveTo(mouseLocation);
                 body->setColor(sf::Color(std::rand() % 255, std::rand() % 255, std::rand() % 255));
                 world.addBody(body);
@@ -168,9 +168,9 @@ void Game::update(float delta)
             if (mouseButtonPressed->button == sf::Mouse::Button::Right) {
 
                 float radius = (std::rand() % 4) / 10.f + 1.2f; // 1.2-1.5
-                PhysicsBody* body = new PhysicsBody{ radius,1.f,false,0.5f };
+                PhysicsBody* body = new PhysicsBody{ radius,1.f,false,0.5f, 0.4f,0.6f };
                 body->moveTo(mouseLocation);
-                body->setColor(sf::Color(std::rand() % 255, std::rand() % 255, std::rand() % 255));
+                //body->setColor(sf::Color(std::rand() % 255, std::rand() % 255, std::rand() % 255));
                 world.addBody(body);
             }
         }

@@ -27,6 +27,7 @@ public:
 
 	void resolveCollisionBasic(const Collision::Manifold& contact);
 	void resolveCollisionWithRotation(const Collision::Manifold& contact);
+	void resolveCollisionWithRotationAndFriction(const Collision::Manifold& contact);
 
 	unsigned int getBodyCount()const;
 

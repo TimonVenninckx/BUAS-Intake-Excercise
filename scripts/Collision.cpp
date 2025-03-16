@@ -2,7 +2,6 @@
 #include "PhysicsMath.h"
 #include <iostream>
 
-constexpr sf::Vector2f zeroVector{ 0.f,0.f };
 
 
 namespace Collision {

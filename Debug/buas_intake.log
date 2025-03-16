@@ -1,7 +1,5 @@
-﻿  PhysicsWorld.cpp
+﻿  Game.cpp
 C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
 C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
-C:\Users\timon\source\repos\buas_intake\scripts\PhysicsWorld.cpp(217,33): warning C4018: '<': signed/unsigned mismatch
-C:\Users\timon\source\repos\buas_intake\scripts\PhysicsWorld.cpp(256,33): warning C4018: '<': signed/unsigned mismatch
   buas_intake.vcxproj -> C:\Users\timon\source\repos\buas_intake\Debug\buas_intake.exe
