@@ -50,5 +50,19 @@
     <ClInclude Include="scripts\Collision.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="scripts\AABB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\TextureLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\smiley.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\blocksmiley.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

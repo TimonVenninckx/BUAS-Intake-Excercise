@@ -1,54 +1,93 @@
 #pragma once
-
+#include "AABB.h"
 #include <SFML/graphics.hpp>
 
+enum class ShapeType {
+	Circle,
+	Box,
+};
+
+// initiate as pointer
 class PhysicsBody
 {
+
+	// general initialize function used by both constructors
+	void initialize(float density, bool isStatic, float restitution);
+
 public:
 
-	enum ShapeType{
-		Circle,
-		Box,
-	};
+	PhysicsBody(PhysicsBody&) = delete;
 
-	PhysicsBody(float radius, sf::Vector2f position, float density, bool isStatic, float restitution,
-		ShapeType shapeType);
+	// CIRCLE CONSTRUCTOR
+	PhysicsBody(float radius,float density, bool isStatic, float restitution);
 
-	PhysicsBody(float width, float height, sf::Vector2f position, float density, bool isStatic, float restitution,
-		ShapeType shapeType);
+	// CUBE CONSTRUCTOR
+	PhysicsBody(float width, float height, float density, bool isStatic, float restitution);
 	~PhysicsBody(); 
 
-	void SetColor(sf::Color color);
-	void Draw(sf::RenderWindow& window);
+	float calculateRotationalInertia();
+
+	void setColor(sf::Color color);
+	void draw(sf::RenderWindow& window);
 	
-	void Move(sf::Vector2f amount);
-	void MoveTo(sf::Vector2f position);
-	void Rotate(float radii);
-	sf::Vector2f GetPosition() const;
-	float GetRadius()const;
+	void step(float time,sf::Vector2f gravity, unsigned int iterations);
 
-	const std::vector<sf::Vector2f>& GetTransformedVertices();
+	void addForce(sf::Vector2f amount);
 
-	ShapeType GetShapeType() const;
+	void move(sf::Vector2f amount);
+	void moveTo(sf::Vector2f position);
+
+	void rotate(float amount);
+	void rotateTo(float angle);
+
+	sf::Vector2f getPosition() const;
+	float getRadius()const;
+
+	const std::vector<sf::Vector2f>& getTransformedVertices();
+	ShapeType getShapeType() const;
+
+	sf::Vector2f linearVelocity{};
+	float getMass();
+	float getInverseMass();
+	float getRestitution();
+	bool  getIsStatic();
+	float getAngularVelocity();
+	void setAngularVelocity(float value);
+	float getInverseInertia();
+	AABB getAABB();
+
+	float angularVelocity{};
 
 private:
+
+	bool aabbUpdateRequired{ true };
+	AABB aabb;
 	bool transformUpdateRequired{ true };
 	std::vector<sf::Vector2f> transformedVertices;
 
-	void TransformVertices();
+	void transformVertices();
+
+	sf::Vector2f force{};
+
 
 	sf::Shape* shape;
-	sf::Vector2f linearVelocity{};
-	float rotationalVelocity{};
-
-	float density;
-	float mass;
-	float restitution;
-	float area;
-	float radius;
+	// physics data
+	ShapeType shapeType{};
+	float density{};
+	float mass{};
+	float inverseMass{};
+	float restitution{};
+	float area{};
+	float ineratia;
+	float inverseIneratia;
+	bool isStatic{ false };
+	float radius{};
+	float width{};
+	float height{};
+	float staticFriction{};
+	float dynamicFriction{};
 		
-	bool isStatic;
 
-	ShapeType shapeType;
+
 };
 

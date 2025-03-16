@@ -1,7 +1,8 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-
+#include "PhysicsBody.h"
+#include "AABB.h"
 
 
 
@@ -13,29 +14,60 @@ namespace Collision
 		float depth = 0.f;
 	};
 
+	struct ContactResult {
+		sf::Vector2f contact1{ 0.f,0.f };
+		sf::Vector2f contact2{ 0.f,0.f };
+		int contactCount{ 0 };
+	};
+
+	struct Manifold {
+		PhysicsBody* bodyA;
+		PhysicsBody* bodyB;
+		sf::Vector2f normal;
+		float depth;
+		sf::Vector2f contact1{ 0.f,0.f };
+		sf::Vector2f contact2{ 0.f,0.f };
+		int contactCount{ 0 };
+
+		Manifold(
+			PhysicsBody* _bodyA, PhysicsBody* _bodyB,
+			sf::Vector2f _normal, float _depth,
+			sf::Vector2f _contact1, sf::Vector2f _contact2, int _contactCount)
+			: bodyA{ _bodyA }, bodyB{ _bodyB }, normal{ _normal }, depth{ _depth },
+			 contact1{ _contact1 }, contact2{ _contact2 }, contactCount{ _contactCount }
+		{}
+	};
+
 	struct MinMax {
 		float min = INFINITY;
 		float max = -INFINITY;
 	};
 
+	bool IntersectAABB(AABB& a, AABB& b);
+
+	ContactResult findContactPoints(PhysicsBody* bodyA, PhysicsBody* bodyB);
+
+
+	HitResult collide(PhysicsBody* bodyA, PhysicsBody* bodyB);
+
 
 	// returns MinMax
-	MinMax ProjectVertices(const std::vector<sf::Vector2f>& vertices, sf::Vector2f axis);
-
-	MinMax ProjectCircle(sf::Vector2f center,float radius, sf::Vector2f axis);
+	MinMax projectVertices(const std::vector<sf::Vector2f>& vertices, sf::Vector2f axis);
+	
+	MinMax projectCircle(sf::Vector2f center,float radius, sf::Vector2f axis);
 
 	// normal returns polygon - circle
-	HitResult IntersectCirclePolygon(sf::Vector2f circleCenter, float circleRadius, 
-		const std::vector<sf::Vector2f>& vertices);
-	// normal returns b-a
-	HitResult IntersectPolygons(const std::vector<sf::Vector2f>& verticesA,
-		const std::vector<sf::Vector2f>& verticesB);
-
-	int FindClosestPointOnPolygon(sf::Vector2f circleCenter, const std::vector<sf::Vector2f>& vertices);
-	sf::Vector2f FindArithmeticMean(const std::vector<sf::Vector2f>& vertices);
+	HitResult intersectCirclePolygon(sf::Vector2f circleCenter, float circleRadius, 
+									 sf::Vector2f polygonCenter,const std::vector<sf::Vector2f>& vertices);
 
 	// normal returns b-a
-	HitResult IntersectCircles(sf::Vector2f centerA, float radiusA,
+	HitResult intersectPolygons(sf::Vector2f polygonCenterA, const std::vector<sf::Vector2f>& verticesA,
+								sf::Vector2f polygonCenterB,const std::vector<sf::Vector2f>& verticesB);
+
+	int findClosestPointOnPolygon(sf::Vector2f circleCenter, const std::vector<sf::Vector2f>& vertices);
+
+	// normal returns b-a
+	HitResult intersectCircles(sf::Vector2f centerA, float radiusA,
 		sf::Vector2f centerB, float radiusB);
 };
 
