@@ -1,5 +1,66 @@
-﻿  PhysicsWorld.cpp
-C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+﻿  AudioLoader.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
-C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
-  buas_intake.vcxproj -> C:\Users\timon\source\repos\buas_intake\Debug\buas_intake.exe
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\scripts\loaders\AudioLoader.cpp(9,27): warning C4834: discarding return value of function with 'nodiscard' attribute
+  Button.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  LevelIcon.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  MainMenu.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  FontLoader.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\scripts\loaders\FontLoader.cpp(13,21): warning C4834: discarding return value of function with 'nodiscard' attribute
+  Level.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  ObjectLoader.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  Catapult.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  Collision.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  Material.cpp
+  PhysicsBody.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  PhysicsMath.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  PhysicsWorld.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  Game.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  main.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  TextureLoader.cpp
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
+  Generating Code...
+C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\scripts\objects\Material.cpp(61): warning C4715: 'Materials::getMaterial': not all control paths return a value
+  buas_intake.vcxproj -> C:\Users\timon\Documents\GitHub\BUAS-Intake-Excercise\Debug\buas_intake.exe
