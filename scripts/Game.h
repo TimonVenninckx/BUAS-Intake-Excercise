@@ -1,7 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "PhysicsBody.h"
+#include "objects/PhysicsBody.h"
 #include "PhysicsWorld.h"
+#include "collision/Collision.h"
+#include "PhysicsMath.h"
+#include "ui/MainMenu.h"
+#include "loaders/Level.h"
+#include "loaders/TextureLoader.h"
 
 
 class Game
@@ -11,36 +16,29 @@ public:
 	~Game();
 
 
-	void update(float delta);
-	void draw();
-
-		
 private:
 
 
+	void update(float delta);
+	void draw();
+
 	sf::RenderWindow window{};
+
+	sf::Vector2f viewSize{};
 
 	sf::View view{};
 	sf::View uiView{};
 
-	PhysicsWorld world;
+	bool inLevel{ false };
+	MainMenu mainMenu;
 
-	
+	PhysicsWorld world;
 	std::vector<sf::Color> colors;
 	sf::Clock clock;
 
-	sf::Font font;
 	sf::Text* frameCounterText;
-	sf::Text* worldStepTimeText;
-	sf::Text* bodyCountText;
 
-
-
-	// for debugging
-	int totalSampleCount;
-	int totalBodyCount;
-	float totalWorldStepTime;
-	sf::Clock sampleTimer;
+	float acumulatedPhysicsDelta{};
 
 };
 

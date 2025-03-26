@@ -24,13 +24,43 @@
     <ClCompile Include="scripts\PhysicsMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scripts\PhysicsBody.cpp">
+    <ClCompile Include="scripts\objects\PhysicsBody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scripts\PhysicsWorld.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scripts\Collision.cpp">
+    <ClCompile Include="scripts\collision\Collision.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\objects\Catapult.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\loaders\TextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\loaders\ObjectLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\loaders\Level.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\loaders\FontLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\objects\Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\ui\MainMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\ui\LevelIcon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\ui\Button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\loaders\AudioLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,19 +71,46 @@
     <ClInclude Include="scripts\PhysicsMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\PhysicsBody.h">
+    <ClInclude Include="scripts\objects\PhysicsBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\PhysicsWorld.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\Collision.h">
+    <ClInclude Include="scripts\collision\Collision.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\AABB.h">
+    <ClInclude Include="scripts\collision\AABB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\TextureLoader.h">
+    <ClInclude Include="scripts\loaders\TextureLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\objects\Catapult.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\loaders\ObjectLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\loaders\Level.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\objects\Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\loaders\FontLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\ui\MainMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\ui\LevelIcon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\ui\Button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\loaders\AudioLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -64,5 +121,26 @@
     <Image Include="textures\blocksmiley.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="textures\catapult.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\woodblock.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\woodbar.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\woodblocks.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\woodblocks2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="textures\10x1woodbar.aseprite" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="fonts\font.otf" />
   </ItemGroup>
 </Project>

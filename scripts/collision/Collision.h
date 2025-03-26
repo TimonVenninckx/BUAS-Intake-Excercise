@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "PhysicsBody.h"
+#include "../objects/PhysicsBody.h"
 #include "AABB.h"
 
 
@@ -27,12 +27,12 @@ namespace Collision
 		float depth;
 		sf::Vector2f contact1{ 0.f,0.f };
 		sf::Vector2f contact2{ 0.f,0.f };
-		int contactCount{ 0 };
+		unsigned int contactCount{ 0 };
 
 		Manifold(
 			PhysicsBody* _bodyA, PhysicsBody* _bodyB,
 			sf::Vector2f _normal, float _depth,
-			sf::Vector2f _contact1, sf::Vector2f _contact2, int _contactCount)
+			sf::Vector2f _contact1, sf::Vector2f _contact2, unsigned int _contactCount)
 			: bodyA{ _bodyA }, bodyB{ _bodyB }, normal{ _normal }, depth{ _depth },
 			 contact1{ _contact1 }, contact2{ _contact2 }, contactCount{ _contactCount }
 		{}

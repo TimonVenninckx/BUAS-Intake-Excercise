@@ -147,25 +147,55 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="scripts\Collision.cpp" />
-    <ClCompile Include="scripts\PhysicsBody.cpp" />
+    <ClCompile Include="scripts\loaders\AudioLoader.cpp" />
+    <ClCompile Include="scripts\ui\Button.cpp" />
+    <ClCompile Include="scripts\ui\LevelIcon.cpp" />
+    <ClCompile Include="scripts\ui\MainMenu.cpp" />
+    <ClCompile Include="scripts\loaders\FontLoader.cpp" />
+    <ClCompile Include="scripts\loaders\Level.cpp" />
+    <ClCompile Include="scripts\loaders\ObjectLoader.cpp" />
+    <ClCompile Include="scripts\objects\Catapult.cpp" />
+    <ClCompile Include="scripts\collision\Collision.cpp" />
+    <ClCompile Include="scripts\objects\Material.cpp" />
+    <ClCompile Include="scripts\objects\PhysicsBody.cpp" />
     <ClCompile Include="scripts\PhysicsMath.cpp" />
     <ClCompile Include="scripts\PhysicsWorld.cpp" />
     <ClCompile Include="scripts\Game.cpp" />
     <ClCompile Include="scripts\main.cpp" />
+    <ClCompile Include="scripts\loaders\TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scripts\AABB.h" />
-    <ClInclude Include="scripts\Collision.h" />
-    <ClInclude Include="scripts\PhysicsBody.h" />
+    <ClInclude Include="scripts\loaders\AudioLoader.h" />
+    <ClInclude Include="scripts\ui\Button.h" />
+    <ClInclude Include="scripts\ui\LevelIcon.h" />
+    <ClInclude Include="scripts\ui\MainMenu.h" />
+    <ClInclude Include="scripts\loaders\FontLoader.h" />
+    <ClInclude Include="scripts\loaders\Level.h" />
+    <ClInclude Include="scripts\objects\Material.h" />
+    <ClInclude Include="scripts\loaders\ObjectLoader.h" />
+    <ClInclude Include="scripts\objects\Catapult.h" />
+    <ClInclude Include="scripts\collision\AABB.h" />
+    <ClInclude Include="scripts\collision\Collision.h" />
+    <ClInclude Include="scripts\objects\PhysicsBody.h" />
     <ClInclude Include="scripts\PhysicsMath.h" />
     <ClInclude Include="scripts\PhysicsWorld.h" />
     <ClInclude Include="scripts\Game.h" />
-    <ClInclude Include="scripts\TextureLoader.h" />
+    <ClInclude Include="scripts\loaders\TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="textures\catapult.png" />
     <Image Include="textures\smiley.png" />
     <Image Include="textures\blocksmiley.png" />
+    <Image Include="textures\woodbar.png" />
+    <Image Include="textures\woodblock.png" />
+    <Image Include="textures\woodblocks.png" />
+    <Image Include="textures\woodblocks2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="textures\10x1woodbar.aseprite" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="fonts\font.otf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

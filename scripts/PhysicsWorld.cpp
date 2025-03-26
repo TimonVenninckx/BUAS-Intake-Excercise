@@ -1,81 +1,304 @@
 #include "PhysicsWorld.h"
 #include <iostream>
-#include "AABB.h"
 #include "PhysicsMath.h"
-
-
-const float PhysicsWorld::minBodySize{ 0.01f * 0.01f };
-const float PhysicsWorld::maxBodySize{ 64.f * 64.f };
-
-const float PhysicsWorld::minDensity = 0.5f; // g/cm^3
-const float PhysicsWorld::maxDensity = 21.4f;
+#include "loaders/TextureLoader.h"
+#include "loaders/FontLoader.h"
 
 
 const unsigned int PhysicsWorld::minIterations = 1;
 const unsigned int PhysicsWorld::maxIterations = 128;
 
 
-PhysicsWorld::PhysicsWorld()
+PhysicsWorld::PhysicsWorld(sf::Vector2f worldSize, sf::Vector2f screenSize) 
+    : catapult{ sf::Vector2f(worldSize.x * -0.4f,5.f) }, 
+    mainMenuButton{ "MainMenu",{160.f,50.f}, {screenSize.x - 105.f, 50.f}},
+    catapultPullSound{ *AudioLoader::getAudio("pull string.mp3") },
+    woodBreakingSound{ *AudioLoader::getAudio("test.mp3") },
+    stoneBreakingSound{ *AudioLoader::getAudio("test.mp3") },
+    launchingSound{ *AudioLoader::getAudio("launchsound.mp3") },
+    collideSound{ *AudioLoader::getAudio("collide.mp3") },
+    enemySound{ *AudioLoader::getAudio("hurt.mp3") },
+    victorySound{ *AudioLoader::getAudio("victory.mp3") }
 {
-	this->gravity = sf::Vector2f(0.f, -9.81f);
+    
+    this->worldSize = worldSize;
+    this->gravity = sf::Vector2f(0.f, -9.81f);
     this->contactPointsList.setPrimitiveType(sf::PrimitiveType::Triangles);
     this->contactDirectionList.setPrimitiveType(sf::PrimitiveType::Lines);
+
+
+    this->timeBetweenTrails = .07f;
+    // first trail should be delayed
+    this->timeTillNextTrail = timeBetweenTrails * 2.f;
+    this->playerNotHitAnytingYet = nullptr;
+
+    // SETUP CATAPULT
+    reload();
+
+
+    // SETUP BACKGROUND
+    sf::Texture* backgroundTexture = TextureLoader::LoadTexture("pixels-evening-grass-sun.jpg");
+    if (backgroundTexture) {
+        this->background = sf::RectangleShape(worldSize);
+        this->background.setPosition({ -worldSize.x / 2.f, 0.f });
+        sf::Vector2i textureSize = { 0,static_cast<int>(backgroundTexture->getSize().y) };
+        this->background.setTexture(backgroundTexture);
+        this->background.setTextureRect(sf::IntRect{ {0,this->background.getTextureRect().size.y},{this->background.getTextureRect().size.x, -this->background.getTextureRect().size.y } });
+    }
+
+    this->scoreText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "Score: ", 50);
+
+    this->playerLivesImage = sf::RectangleShape({ 30.f,30.f });
+    this->playerLivesImage.setPosition({ 5.f,55.f });
+    this->playerLivesImage.setTexture(TextureLoader::LoadTexture("ball1.png"));
+    this->playerLivesText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "3 ", 30);
+    this->playerLivesText->setPosition({ 40.f, 50.f });
+    
+    this->levelNameText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "LevelName", 50);
+    this->levelNameText->setPosition({ screenSize.x / 2.f, 0.f });
+
+    this->youWonText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "You Won", 50);
+    this->youWonText->setPosition({screenSize / 2.f});
+    this->youWonText->setOrigin(youWonText->getGlobalBounds().size / 2.f);
+
+
+    woodBreakingSound.setVolume(30.f);
+    stoneBreakingSound.setVolume(30.f);
+    catapultPullSound.setVolume(30.f);
+    launchingSound.setVolume(30.f);
+    collideSound.setVolume(3.f);
+    enemySound.setVolume(30.f);
+    victorySound.setVolume(30.f);
+}
+
+void PhysicsWorld::reload()
+{
+    if (catapult.isLoaded() || playerLives < 1)
+        return;
+
+
+    PhysicsBody* launchedBody = new PhysicsBody(ShapeType::Circle, 1.5f, 0.f, 0.f, false, MaterialType::Player, 300.f);
+    launchedBody->setTexture(TextureLoader::LoadTexture("ball1.png"));
+    this->catapult.load(launchedBody);
+    this->timeTillNextTrail = timeBetweenTrails * 2.f;
+}
+
+void PhysicsWorld::resetLevel()
+{
+    for (unsigned int i{ 0 }; i < objectList.size(); i++) {
+        delete objectList[i];
+    }
+    objectList.clear();
+    for (unsigned int i{ 0 }; i < enemyList.size(); i++) {
+        delete enemyList[i];
+    }
+    enemyList.clear();
+    for (unsigned int i{ 0 }; i < playerList.size(); i++) {
+        delete playerList[i];
+    }
+    playerList.clear();
+    score = 0;
+
+    trailList.clear();
+    timeTillNextTrail = timeBetweenTrails * 2.f;
+    this->playerNotHitAnytingYet = nullptr;
+    wonGame = false;
+}
+
+PhysicsWorld::~PhysicsWorld()
+{
+    resetLevel();
+    delete levelNameText;
+    delete scoreText;
+
+    // destroyed bodylist contains the same bodies so we don't need to clear that aswell
 }
 
 
-void PhysicsWorld::addBody(PhysicsBody* body)
+void PhysicsWorld::addObject(PhysicsBody* body)
 {
     if (body)
-	    this->bodylist.push_back(body);
+	    this->objectList.push_back(body);
 }
-
-
-
 bool PhysicsWorld::removeBody(PhysicsBody* body)
 {
-    auto result = std::find_if(this->bodylist.begin(), this->bodylist.end(),
+    if (body == playerNotHitAnytingYet)
+        playerNotHitAnytingYet = nullptr;
+
+    bool removed{ false };
+    auto result = std::find_if(this->objectList.begin(), this->objectList.end(),
         [body](PhysicsBody* c) { return c == body; });
+    if (result != objectList.end()) {
+        delete (*result);
+        this->objectList.erase(result);
+        removed = true;
+    }
+    // check enemy removing
+    result = std::find_if(this->enemyList.begin(), this->enemyList.end(),
+        [body](PhysicsBody* c) { return c == body; });
+    if (result != enemyList.end()) {
+        delete (*result);
+        this->enemyList.erase(result);
+        removed = true;
+    }
+    // check player removing
+    result = std::find_if(this->playerList.begin(), this->playerList.end(),
+        [body](PhysicsBody* c) { return c == body; });
+    if (result != playerList.end()) {
+        delete (*result);
+        this->playerList.erase(result);
+        removed = true;
+    }
 
-	if (result == bodylist.end())
-		return false;
-    delete (*result);
-	this->bodylist.erase(result);
-	return true;
+    // destroyed bodylist check
+    auto dresult = this->destroyedBodyList.find(body);
+    if (dresult != destroyedBodyList.end()) {
+        destroyedBodyList.erase(dresult);
+    }
+    return removed;
+}
+void PhysicsWorld::addEnemy(PhysicsBody* body) {
+    if (body)
+        this->enemyList.push_back(body);
 }
 
-PhysicsBody* PhysicsWorld::getBody(unsigned int index)
+bool PhysicsWorld::exitLevel(const std::optional<sf::Event> event, sf::Vector2f mouseLocation,sf::Vector2f mouseLocationInUI)
 {
-	if (index >= bodylist.size() || index < 0)
-		return nullptr;
+    if (const sf::Event::KeyPressed* keypressed = event->getIf<sf::Event::KeyPressed>()) { // keypressed
+            // reload
+        if (keypressed->scancode == sf::Keyboard::Scan::Escape) {
+            this->resetLevel();
+            return true;
+        }
+    }
+    else if (const sf::Event::MouseButtonPressed* mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>()) { // mouse button pressed
+       
+        if (mouseButtonPressed->button == sf::Mouse::Button::Left) {
+           if (catapult.contains(mouseLocation)) {
+               holdingCatapult = true;
+               catapultPullSound.play();
+           }
+           else if (mainMenuButton.contains(mouseLocationInUI)) {
+               resetLevel();
+               return true;
+           }
+        }
+    }
+    else if (const sf::Event::MouseButtonReleased* mouseButtonReleased = event->getIf<sf::Event::MouseButtonReleased>()) { // mouse button pressed
+        if (mouseButtonReleased->button == sf::Mouse::Button::Left) {
+            if (catapult.isLoaded() && holdingCatapult) {
+                setPlayerLives(playerLives - 1);
+                playerNotHitAnytingYet = catapult.release();
+                launchingSound.play();
+                this->playerList.push_back(playerNotHitAnytingYet);
+                holdingCatapult = false;
+                trailList.clear();
+            }
+        }
+        if (mouseButtonReleased->button == sf::Mouse::Button::Right) {
+        }
+    }
+    return false;
+}
 
-	return bodylist[index];
+bool PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
+{
+    if (playerNotHitAnytingYet) {
+        timeTillNextTrail -= delta;
+        if (timeTillNextTrail < 0.f) {
+            sf::CircleShape trail(.5f);
+            trail.setOrigin(trail.getGlobalBounds().getCenter());
+            trail.setPosition(playerNotHitAnytingYet->getPosition());
+            trailList.push_back(trail);
+            timeTillNextTrail += timeBetweenTrails;
+        }
+    }
+    else {
+        reload();
+    }
+
+    if (!wonGame) {
+        if (enemyList.empty()) {
+            wonGame = true;
+            victorySound.play();
+        }
+    }
+
+    scoreText->setString("Score: " + std::to_string(score));
+
+    checkOutOfBounds();
+
+    if (holdingCatapult)
+        catapult.update(mouseLocation);
+
+    return true;
 }
 
 
-
-void PhysicsWorld::step(float time,unsigned int totalIterations)
+void PhysicsWorld::step(float deltaTime)
 {
-    totalIterations = std::clamp(totalIterations, minIterations, maxIterations);
+
     contactPointsList.clear();
     contactDirectionList.clear();
 
-    for (unsigned int currentIteration{ 0 }; currentIteration < totalIterations; currentIteration++) {
+    this->contactPairs.clear();
+    this->stepBodies(deltaTime);
+    this->broadPhase();
+    this->narrowPhase(deltaTime);
+}
+void PhysicsWorld::draw(sf::RenderWindow& window) {
 
-        this->contactPairs.clear();
-        this->stepBodies(time,totalIterations);
-        this->broadPhase();
-        this->narrowPhase();
+    window.draw(this->background);
+    for (unsigned int i{ 0 }; i < objectList.size(); i++) {
+        objectList[i]->draw(window);
     }
+    for (unsigned int i{ 0 }; i < playerList.size(); i++) {
+        playerList[i]->draw(window);
+    }
+    for (unsigned int i{ 0 }; i < enemyList.size(); i++) {
+        enemyList[i]->draw(window);
+    }
+    catapult.draw(window);
+
+    for (unsigned int i{ 0 }; i < trailList.size(); i++) {
+        window.draw(trailList[i]);
+    }
+
+    //debugging
+    window.draw(contactPointsList);
+    window.draw(contactDirectionList);
+
 }
 
+void PhysicsWorld::drawUI(sf::RenderWindow& window) {
+    if(scoreText)
+        window.draw(*scoreText);
+    if (levelNameText)
+        window.draw(*levelNameText);
 
-void PhysicsWorld::broadPhase() {
-    for (unsigned int i{ 0 }; i < bodylist.size() - 1; i++) {
-        PhysicsBody* bodyA = this->bodylist[i];
+    window.draw(playerLivesImage);
+    if (playerLivesText)
+        window.draw(*playerLivesText);
+    if (youWonText && enemyList.empty())
+        window.draw(*youWonText);
+
+    mainMenuButton.draw(window);
+}
+
+void PhysicsWorld::broadPhaseCheckSelf(const std::vector<PhysicsBody*>& list){
+    // checking objects against themselves
+    if (list.empty())
+        return;
+    for (unsigned int i{ 0 }; i < list.size() - 1; i++) {
+        PhysicsBody* bodyA = list[i];
+        if (bodyA->getIsDestroyed())
+            continue;
         AABB bodyA_aabb = bodyA->getAABB();
 
-        for (unsigned int j{ i + 1 }; j < bodylist.size(); j++) {
-            PhysicsBody* bodyB = this->bodylist[j];
+        for (unsigned int j{ i + 1 }; j < list.size(); j++) {
+            PhysicsBody* bodyB = list[j];
+            if (bodyB->getIsDestroyed())
+                continue;
             AABB bodyB_aabb = bodyB->getAABB();
 
             if (bodyA->getIsStatic() && bodyB->getIsStatic())
@@ -83,80 +306,166 @@ void PhysicsWorld::broadPhase() {
             if (!Collision::IntersectAABB(bodyA_aabb, bodyB_aabb))
                 continue;
 
-            this->contactPairs.push_back({ i,j });
+            this->contactPairs.push_back({ bodyA,bodyB });
         }
     }
 }
+void PhysicsWorld::broadPhaseCheckVersus(const std::vector<PhysicsBody*>& listA, const std::vector<PhysicsBody*>& listB){
+    // checking objects against themselves
+    for (unsigned int i{ 0 }; i < listA.size(); i++) {
+        PhysicsBody* bodyA = listA[i];
+        if (bodyA->getIsDestroyed())
+            continue;
+        AABB bodyA_aabb = bodyA->getAABB();
 
-void PhysicsWorld::narrowPhase() {
+        for (unsigned int j{ 0 }; j < listB.size(); j++) {
+            PhysicsBody* bodyB = listB[j];
+            if (bodyB->getIsDestroyed())
+                continue;
+            AABB bodyB_aabb = bodyB->getAABB();
 
+            if (bodyA->getIsStatic() && bodyB->getIsStatic())
+                continue;
+            if (!Collision::IntersectAABB(bodyA_aabb, bodyB_aabb))
+                continue;
+
+            this->contactPairs.push_back({ bodyA,bodyB });
+        }
+    }
+}
+void PhysicsWorld::broadPhase() {
+    this->broadPhaseCheckSelf(objectList);
+    this->broadPhaseCheckSelf(enemyList);
+    this->broadPhaseCheckSelf(playerList);
+    this->broadPhaseCheckVersus(enemyList, objectList);
+    this->broadPhaseCheckVersus(playerList, objectList);
+    this->broadPhaseCheckVersus(playerList, enemyList);
+}
+void PhysicsWorld::narrowPhase(float delta) {
+
+    static std::list<PhysicsBody*> bodiesThatCollided;
+    bodiesThatCollided.clear();
     for (unsigned int i{ 0 }; i < this->contactPairs.size(); i++) {
 
-        std::tuple<unsigned int, unsigned int> pair = this->contactPairs[i];
-        PhysicsBody* bodyA = this->bodylist[std::get<0>(pair)];
-        PhysicsBody* bodyB = this->bodylist[std::get<1>(pair)];
+        std::tuple<PhysicsBody*, PhysicsBody*> pair = this->contactPairs[i];
+        PhysicsBody* bodyA = std::get<0>(pair);
+        PhysicsBody* bodyB = std::get<1>(pair);
 
         Collision::HitResult result{ Collision::collide(bodyA, bodyB) };
+        //std::cout << "Normal:" << result.normal.x << ',' << result.normal.y << '\n';
+
 
         if (result.collided) {
+            if (playerNotHitAnytingYet) {
+                if (playerNotHitAnytingYet == bodyA || playerNotHitAnytingYet == bodyB) {
+                    playerNotHitAnytingYet = nullptr;
+                }
+            }
+            bodiesThatCollided.push_back(bodyA);
+            bodiesThatCollided.push_back(bodyB);
 
-            seperateBodies(bodyA, bodyB, result.normal * result.depth);
+            separateBodies(bodyA, bodyB, result.normal * result.depth);
 
             Collision::ContactResult cr = Collision::findContactPoints(bodyA, bodyB);
             Collision::Manifold contact(bodyA, bodyB, result.normal, result.depth, cr.contact1, cr.contact2, cr.contactCount);
-            this->resolveCollisionWithRotationAndFriction(contact);
+             sf::Vector2f impulseVector = this->resolveCollisionWithRotationAndFriction(contact,delta);
 
+            // damage the objects
 
-            #define debugging
-            #ifdef debugging
-            sf::Vertex v;
-            sf::Vertex l;
-            v.color = sf::Color(255, 0, 0);
-            l.color = sf::Color(255, 255, 0);
-
-            v.position = (cr.contact1 + sf::Vector2f{ 0.f, 0.3f });
-            this->contactPointsList.append(v);
-            v.position = (cr.contact1 + sf::Vector2f{ -0.3f, -0.3f });
-            this->contactPointsList.append(v);
-            v.position = (cr.contact1 + sf::Vector2f{ 0.3f, -0.3f });
-            this->contactPointsList.append(v);
-
-            l.position = cr.contact1;
-            this->contactDirectionList.append(l);
-            l.position += result.normal * result.depth * 50.f;
-            this->contactDirectionList.append(l);
-            if (cr.contactCount > 1) {
-                v.position = (cr.contact2 + sf::Vector2f{ 0.f, 0.3f });
-                this->contactPointsList.append(v);
-                v.position = (cr.contact2 + sf::Vector2f{ -0.3f, -0.3f });
-                this->contactPointsList.append(v);
-                v.position = (cr.contact2 + sf::Vector2f{ 0.3f, -0.3f });
-                this->contactPointsList.append(v);
-
-                l.position = cr.contact2;
-                this->contactDirectionList.append(l);
-                l.position += result.normal * result.depth * 50.f;
-                this->contactDirectionList.append(l);
+            if (!bodyA->getIsStatic() && !bodyB->getIsStatic()) {
+                if (impulseVector.length() > this->damageThreshold) {
+                    collideSound.play();
+                    score += static_cast<int>(impulseVector.length());
+                    std::cout << "Damage: " << impulseVector.length() << '\n';
+                    bodyA->damage(impulseVector.length());
+                    bodyB->damage(impulseVector.length());
+                }
             }
-            #endif
+        }
+    }
+    // NOW WE RUN THROUGH ALL BODIES TO CLAMP THEM.
+    while (!bodiesThatCollided.empty())
+    {
+        dampenVelocity(bodiesThatCollided.back());
+        bodiesThatCollided.pop_back();
+    }
+}
+
+
+void PhysicsWorld::stepBodies(float time) {
+
+    constexpr float fadeOutTime = 0.2f;
+
+    PhysicsBody* body;
+    for (unsigned int i{ 0 }; i < this->objectList.size(); i++) {
+        body = this->objectList[i];
+        body->step(time, this->gravity);
+        if (body->getIsDestroyed()) {
+            // add to destroyed body list to keep rendering them for a bit after destruction
+            auto result = this->destroyedBodyList.find(body);
+            if (result == destroyedBodyList.end()) {
+                destroyedBodyList.insert({ body, fadeOutTime });
+                switch (body->getMaterialType()) {
+                case MaterialType::Wood: woodBreakingSound.play(); break;
+                case MaterialType::Stone: stoneBreakingSound.play(); break;
+                }
+            }
+        }
+    }
+    for (unsigned int i{ 0 }; i < this->enemyList.size(); i++) {
+        body = this->enemyList[i];
+        body->step(time, this->gravity);
+        if (body->getIsDestroyed()) {
+            // add to destroyed body list to keep rendering them for a bit after destruction
+            auto result = this->destroyedBodyList.find(body);
+            if (result == destroyedBodyList.end()) {
+                // WE KILLED AN ENEMY INCREASE SCORE BY A LOT
+                score += 5000;
+                enemySound.play();
+                destroyedBodyList.insert({ body, fadeOutTime });
+            }
+        }
+    }
+    for (unsigned int i{ 0 }; i < this->playerList.size(); i++) {
+        body = this->playerList[i];
+        body->step(time, this->gravity);
+        if (body->getIsDestroyed()) {
+            // add to destroyed body list to keep rendering them for a bit after destruction
+            auto result = this->destroyedBodyList.find(body);
+            if (result == destroyedBodyList.end()) {
+                destroyedBodyList.insert({ body, fadeOutTime });
+                score += 100;
+            }
+        }
+    }
+    // update timer on destroyed bodies
+
+    for (std::map<PhysicsBody*, float>::iterator it{ destroyedBodyList.begin() }, nextIt = it;  nextIt != destroyedBodyList.end();it = nextIt) {
+        nextIt++;
+        it->second -= time;
+        if (it->second < 0.f) {
+            PhysicsBody* body = it->first;
+            this->removeBody(body);
+        } 
+        else {
+            int opacity = std::clamp(static_cast<int>(it->second / fadeOutTime * 255.f ),0,255);
+            it->first->setOpacity(opacity);
         }
     }
 }
 
-void PhysicsWorld::stepBodies(float time, int total) {
 
-    for (unsigned int i{ 0 }; i < this->bodylist.size(); i++) {
-        this->bodylist[i]->step(time, this->gravity, total);
-    }
-}
-
-void PhysicsWorld::seperateBodies(PhysicsBody* bodyA, PhysicsBody* bodyB, sf::Vector2f mtv) {
+void PhysicsWorld::separateBodies(PhysicsBody* bodyA, PhysicsBody* bodyB, sf::Vector2f mtv) {
     // mtv = normal * depth
     if (bodyA->getIsStatic()) {
         bodyB->move(mtv);
+        //if (mtv.x > 0.005f || mtv.y > 0.005f)
+        //    std::cout << "How much we are displacing: " << mtv.x << ',' << mtv.y << '\n';
     }
     else if (bodyB->getIsStatic()) {
         bodyA->move(-mtv);
+        //if (mtv.x > 0.005f || mtv.y > 0.005f)
+        //    std::cout << "How much we are displacing: " << mtv.x << ',' << mtv.y << '\n';
     }
     else {
         bodyA->move(-mtv / 2.f);
@@ -164,36 +473,8 @@ void PhysicsWorld::seperateBodies(PhysicsBody* bodyA, PhysicsBody* bodyB, sf::Ve
     }
 }
 
-
-void PhysicsWorld::resolveCollisionBasic(const Collision::Manifold& contact){
-
-    //  https://www.chrishecker.com/Rigid_Body_Dynamics
-    //  https://www.chrishecker.com/images/e/e7/Gdmphys3.pdf PAGE 4 FOR THE FORMULA
-
-    sf::Vector2f relativeVelocity = contact.bodyB->linearVelocity - contact.bodyA->linearVelocity;
-
-    // if already moveing apart not necessary 
-    // negative dot product means pointing the opposite way
-    if (relativeVelocity.dot(contact.normal) > 0.f)
-        return;
-
-
-    float e = std::min(contact.bodyA->getRestitution(), contact.bodyB->getRestitution());
-
-    // numerator
-    float j = -(1.f + e) * relativeVelocity.dot(contact.normal);
-    // denominator
-    j /= contact.bodyA->getInverseMass() + contact.bodyB->getInverseMass();
-
-    sf::Vector2f impulse = j * contact.normal;
-
-    contact.bodyA->linearVelocity -= contact.bodyA->getInverseMass() * impulse;
-    contact.bodyB->linearVelocity += contact.bodyB->getInverseMass() * impulse;
-
-}
-
-
-void PhysicsWorld::resolveCollisionWithRotation(const Collision::Manifold& contact) {
+// use the vector for damaging objects
+sf::Vector2f PhysicsWorld::resolveCollisionWithRotationAndFriction(const Collision::Manifold& contact, float delta) {
 
     PhysicsBody* bodyA = contact.bodyA;
     PhysicsBody* bodyB = contact.bodyB;
@@ -202,88 +483,12 @@ void PhysicsWorld::resolveCollisionWithRotation(const Collision::Manifold& conta
     sf::Vector2f contact1 = contact.contact1;
     sf::Vector2f contact2 = contact.contact2;
 
-    int contactCount = contact.contactCount;
+    unsigned int contactCount = contact.contactCount;
 
     float e = std::min(bodyA->getRestitution(), bodyB->getRestitution());
 
-    // all static so we dont allocate them every function call
-    static std::array<sf::Vector2f, 2> contactList{};
-    static std::array<sf::Vector2f, 2> impulseList{};
-    static std::array<sf::Vector2f, 2> raList{};
-    static std::array<sf::Vector2f, 2> rbList{};
-    contactList[0] = contact1;
-    contactList[1] = contact2;
-
-
-    for (unsigned int i{ 0 }; i < contactCount; i++) {
-        sf::Vector2f ra = contactList[i] - bodyA->getPosition();
-        sf::Vector2f rb = contactList[i] - bodyB->getPosition();
-
-        raList[i] = ra;
-        rbList[i] = rb;
-
-        sf::Vector2f raPerp = { -ra.y,ra.x };
-        sf::Vector2f rbPerp = { -rb.y,rb.x };
-
-        sf::Vector2f angularLinearVelocityA = raPerp * bodyA->angularVelocity;
-        sf::Vector2f angularLinearVelocityB = rbPerp * bodyB->angularVelocity;
-
-        sf::Vector2f relativeVelocity = 
-            (bodyB->linearVelocity + angularLinearVelocityB) -
-            (bodyA->linearVelocity + angularLinearVelocityA);
-
-        float contactVelocityMag = relativeVelocity.dot(normal);
-
-        // if already moveing apart not necessary 
-        // negative dot product means pointing the opposite way
-        if (contactVelocityMag > 0.f)
-            continue;
-
-        float raPerpDotN = raPerp.dot(normal);
-        float rbPerpDotN = rbPerp.dot(normal);
-
-        float denom = bodyA->getInverseMass() + bodyB->getInverseMass() + 
-            (raPerpDotN * raPerpDotN) * bodyA->getInverseInertia() +
-            (rbPerpDotN * rbPerpDotN) * bodyB->getInverseInertia();
-
-        float j = -(1.f + e) * contactVelocityMag;
-        j /= denom;
-        j /= static_cast<float>(contactCount);
-
-        sf::Vector2f impulse = j * normal;
-        impulseList[i] = impulse;
-    }
-
-    for (unsigned int i{ 0 }; i < contactCount; i++) {
-        sf::Vector2f impulse = impulseList[i];
-        //std::cout << "Impulse:" << impulse.x << ',' << impulse.y << '\n';
-
-        // ANGULAR VELOCITY ON A IS NORMAL AND B IS NEGATIVE BECAUSE ROTATION WORKS DIFFERENTLY IN SFML
-        bodyA->linearVelocity += bodyA->getInverseMass() * -impulse;
-        bodyA->angularVelocity += (impulse.cross(raList[i]) * bodyA->getInverseInertia());
-        bodyB->linearVelocity += bodyB->getInverseMass() * impulse;
-        bodyB->angularVelocity += (-impulse.cross(rbList[i]) * bodyB->getInverseInertia());
-    }
-
-    //std::cout << "A angular: " << bodyA->angularVelocity << '\n';
-    //std::cout << "B angular: " << bodyB->angularVelocity << '\n';
-}
-
-void PhysicsWorld::resolveCollisionWithRotationAndFriction(const Collision::Manifold& contact) {
-
-    PhysicsBody* bodyA = contact.bodyA;
-    PhysicsBody* bodyB = contact.bodyB;
-
-    sf::Vector2f normal = contact.normal;
-    sf::Vector2f contact1 = contact.contact1;
-    sf::Vector2f contact2 = contact.contact2;
-
-    int contactCount = contact.contactCount;
-
-    float e = std::min(bodyA->getRestitution(), bodyB->getRestitution());
-
-    float sf = (bodyA->getStaticFriction() * bodyB->getStaticFriction()) * 0.5f;
-    float df = (bodyA->getDynamicFriction() * bodyB->getDynamicFriction()) * 0.5f;
+    float sf = (bodyA->getStaticFriction() * bodyB->getStaticFriction()) / 2.f;
+    float df = (bodyA->getDynamicFriction() * bodyB->getDynamicFriction()) / 2.f;
 
     // all static so we dont allocate them every function call
     static std::array<sf::Vector2f, 2> contactList{};
@@ -313,12 +518,12 @@ void PhysicsWorld::resolveCollisionWithRotationAndFriction(const Collision::Mani
         sf::Vector2f raPerp = { -ra.y,ra.x };
         sf::Vector2f rbPerp = { -rb.y,rb.x };
 
-        sf::Vector2f angularLinearVelocityA = raPerp * bodyA->angularVelocity;
-        sf::Vector2f angularLinearVelocityB = rbPerp * bodyB->angularVelocity;
+        sf::Vector2f angularLinearVelocityA = raPerp * bodyA->getAngularVelocity();
+        sf::Vector2f angularLinearVelocityB = rbPerp * bodyB->getAngularVelocity();
 
         sf::Vector2f relativeVelocity =
-            (bodyB->linearVelocity + angularLinearVelocityB) -
-            (bodyA->linearVelocity + angularLinearVelocityA);
+            (bodyB->getLinearVelocity() + angularLinearVelocityB) -
+            (bodyA->getLinearVelocity() + angularLinearVelocityA);
 
         float contactVelocityMag = relativeVelocity.dot(normal);
 
@@ -345,16 +550,15 @@ void PhysicsWorld::resolveCollisionWithRotationAndFriction(const Collision::Mani
     }
 
     // NOW WE CALCULATE THE FRICTION
-
     for (unsigned int i{ 0 }; i < contactCount; i++) {
         sf::Vector2f impulse = impulseList[i];
-        //std::cout << "Impulse:" << impulse.x << ',' << impulse.y << '\n';
+
 
         // ANGULAR VELOCITY ON A IS NORMAL AND B IS NEGATIVE BECAUSE ROTATION WORKS DIFFERENTLY IN SFML
-        bodyA->linearVelocity += bodyA->getInverseMass() * -impulse;
-        bodyA->angularVelocity += (impulse.cross(raList[i]) * bodyA->getInverseInertia());
-        bodyB->linearVelocity += bodyB->getInverseMass() * impulse;
-        bodyB->angularVelocity += (-impulse.cross(rbList[i]) * bodyB->getInverseInertia());
+        bodyA->addLinearVelocity(-impulse * bodyA->getInverseMass());
+        bodyA->addAngularVelocity(impulse.cross(raList[i]) * bodyA->getInverseInertia());
+        bodyB->addLinearVelocity(impulse * bodyB->getInverseMass());
+        bodyB->addAngularVelocity(-impulse.cross(rbList[i]) * bodyB->getInverseInertia());
     }
 
     for (unsigned int i{ 0 }; i < contactCount; i++) {
@@ -367,12 +571,12 @@ void PhysicsWorld::resolveCollisionWithRotationAndFriction(const Collision::Mani
         sf::Vector2f raPerp = { -ra.y,ra.x };
         sf::Vector2f rbPerp = { -rb.y,rb.x };
 
-        sf::Vector2f angularLinearVelocityA = raPerp * bodyA->angularVelocity;
-        sf::Vector2f angularLinearVelocityB = rbPerp * bodyB->angularVelocity;
+        sf::Vector2f angularLinearVelocityA = raPerp * bodyA->getAngularVelocity();
+        sf::Vector2f angularLinearVelocityB = rbPerp * bodyB->getAngularVelocity();
 
         sf::Vector2f relativeVelocity =
-            (bodyB->linearVelocity + angularLinearVelocityB) -
-            (bodyA->linearVelocity + angularLinearVelocityA);
+            (bodyB->getLinearVelocity() + angularLinearVelocityB) -
+            (bodyA->getLinearVelocity() + angularLinearVelocityA);
 
         sf::Vector2f tangent = relativeVelocity - relativeVelocity.dot(normal) * normal;
 
@@ -400,52 +604,167 @@ void PhysicsWorld::resolveCollisionWithRotationAndFriction(const Collision::Mani
             frictionImpulse = jt * tangent;
         }
         else {
-            frictionImpulse = -j * tangent * df;
+            frictionImpulse = -j * tangent;
         }
         frictionImpulseList[i] = frictionImpulse;
     }
 
     for (unsigned int i{ 0 }; i < contactCount; i++) {
         sf::Vector2f frictionImpulse = frictionImpulseList[i];
-        //std::cout << "Impulse:" << impulse.x << ',' << impulse.y << '\n';
 
         // ANGULAR VELOCITY ON A IS NORMAL AND B IS NEGATIVE BECAUSE ROTATION WORKS DIFFERENTLY IN SFML
-        bodyA->linearVelocity += bodyA->getInverseMass() * -frictionImpulse;
-        bodyA->angularVelocity += (frictionImpulse.cross(raList[i]) * bodyA->getInverseInertia());
-        bodyB->linearVelocity += bodyB->getInverseMass() * frictionImpulse;
-        bodyB->angularVelocity += (-frictionImpulse.cross(rbList[i]) * bodyB->getInverseInertia());
+        bodyA->addLinearVelocity(-frictionImpulse * bodyA->getInverseMass());
+        bodyA->addAngularVelocity(frictionImpulse.cross(raList[i]) * bodyA->getInverseInertia());
+        bodyB->addLinearVelocity(frictionImpulse * bodyB->getInverseMass());
+        bodyB->addAngularVelocity(-frictionImpulse.cross(rbList[i]) * bodyB->getInverseInertia());
+    }
+    
+    //dampenVelocity(bodyA);
+    //dampenVelocity(bodyB);
+
+    sf::Vector2f impulseTotal = impulseList[0] +  frictionImpulseList[0];
+    if (contactCount > 1) {
+        impulseTotal += impulseList[1] + frictionImpulseList[1];
+        impulseTotal /= 4.f;
+    }
+    else {
+        impulseTotal /= 2.f;
     }
 
-    //std::cout << "A angular: " << bodyA->angularVelocity << '\n';
-    //std::cout << "B angular: " << bodyB->angularVelocity << '\n';
+    return impulseTotal;
 }
 
-
-unsigned int PhysicsWorld::getBodyCount() const
+void PhysicsWorld::dampenVelocity(PhysicsBody* body)
 {
-    return bodylist.size();
+    // damping to Make stacking blocks doable in the engine
+#define damping
+#ifdef damping
+
+
+    // rotational friction
+    float rotationalFrictionCoefficient = 0.0001f;
+    if (body->getAngularVelocity() > 0.f) {
+        body->addAngularVelocity(-rotationalFrictionCoefficient);
+    }
+    else {
+        body->addAngularVelocity(rotationalFrictionCoefficient);
+    }
+
+    // stop small rotational movement
+    float angularVelocityThreshold = 0.01f;
+    if (std::abs(body->getAngularVelocity()) < angularVelocityThreshold) body->addAngularVelocity(-body->getAngularVelocity());
+
+
+    
+    // stop small movement due to innacurate floating point values
+    float linearFrictionCoefficient = 0.002f;
+    if (body->getLinearVelocity().x > 0.f) {
+        body->addLinearVelocity({ -linearFrictionCoefficient,0.f });
+    }
+    else {
+        body->addLinearVelocity({  linearFrictionCoefficient,0.f });
+    }
+    // y coordinate
+    if (body->getLinearVelocity().y > 0.f) {
+        body->addLinearVelocity({ 0.f,-linearFrictionCoefficient });
+    }
+    else {
+        body->addLinearVelocity({ 0.f,linearFrictionCoefficient });
+    }
+
+    // stop small linear movement
+    float linearVelocityThreshold = 0.3f;
+    if (std::abs(body->getLinearVelocity().length()) < linearVelocityThreshold) body->addLinearVelocity(-body->getLinearVelocity());
+    
+
+    #endif
 }
 
 
+void PhysicsWorld::checkOutOfBounds()
+{
+    // OUT OF BOUNDS CHECK
+    float bottomScreen = worldSize.y * -0.5f;
+
+    // removing out of bounds objects
+    for (unsigned int i{ 0 }; i < objectList.size(); i++) {
+        PhysicsBody* body = objectList[i];
+        if (body->getIsStatic())
+            continue;
+        if (body->getAABB().max.y < bottomScreen) {
+            removeBody(body);
+            i--;
+        }
+    }
+    // removing out of bounds enemies
+    for (unsigned int i{ 0 }; i < enemyList.size(); i++) {
+        PhysicsBody* body = enemyList[i];
+        if (body->getIsStatic())
+            continue;
+        if (body->getAABB().max.y < bottomScreen) {
+            removeBody(body);
+            i--;
+        }
+    }
+    // removing out of bounds playerobjects
+    for (unsigned int i{ 0 }; i < playerList.size(); i++) {
+        PhysicsBody* body = playerList[i];
+        if (body->getIsStatic())
+            continue;
+        if (body->getAABB().max.y < bottomScreen) {
+            removeBody(body);
+            i--;
+        }
+    }
+}
+void PhysicsWorld::setLevelName(const std::string& name)
+{
+    levelNameText->setString(name);
+    levelNameText->setOrigin({ levelNameText->getGlobalBounds().size.x / 2.f, 0.f });
+}
+
+void PhysicsWorld::setPlayerLives(int lives)
+{
+    this->playerLives = lives;
+    if(playerLivesText)
+        playerLivesText->setString(std::to_string(lives));
+}
+
+
+/* old stuff
+
+    // rotational friction
+    float rotationalFrictionCoefficient = 0.001f;
+    if (body->getAngularVelocity() > 0.f) {
+        body->addAngularVelocity(-rotationalFrictionCoefficient);
+    }
+    else {
+        body->addAngularVelocity(rotationalFrictionCoefficient);
+    }
+
+    // stop small rotational movement
+    float angularVelocityThreshold = 0.08f;
+    if (std::abs(body->getAngularVelocity()) < angularVelocityThreshold) body->addAngularVelocity(-body->getAngularVelocity());
 
 
 
+    // stop small movement due to innacurate floating point values
+    float linearFrictionCoefficient = 0.01f;
+    if (body->getLinearVelocity().x > 0.f) {
+        body->addLinearVelocity({ -linearFrictionCoefficient,0.f });
+    }
+    else {
+        body->addLinearVelocity({  linearFrictionCoefficient,0.f });
+    }
+    // y coordinate
+    if (body->getLinearVelocity().y > 0.f) {
+        body->addLinearVelocity({ 0.f,-linearFrictionCoefficient });
+    }
+    else {
+        body->addLinearVelocity({ 0.f,linearFrictionCoefficient });
+    }
 
-/*
-
-
-
-        std::vector<bool> colliding;
-        colliding.resize(bodylist.size());
-        std::fill(colliding.begin(), colliding.end(), false);
-
-        colliding[i] = true;
-        colliding[j] = true;
-
-        */
-
-
-
-
-        // Add contact points for display (DEBUG)
-        //#define debugging
+    // stop small linear movement
+    float linearVelocityThreshold = 0.5f;
+    if (std::abs(body->getLinearVelocity().length()) < linearVelocityThreshold) body->addLinearVelocity(-body->getLinearVelocity());
+    */

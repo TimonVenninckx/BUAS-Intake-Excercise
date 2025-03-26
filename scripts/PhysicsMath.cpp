@@ -1,6 +1,6 @@
 #include "PhysicsMath.h"
 
-constexpr float VerySmallAmount = 0.0005f;
+constexpr float VerySmallAmount = 0.005f;
 
 namespace PhysicsMath {
 

@@ -1,13 +1,10 @@
-﻿  Game.cpp
+﻿  PhysicsWorld.cpp
 C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
 C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
-  PhysicsWorld.cpp
-C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
-C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
-  main.cpp
-C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(42,1): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdexcept(101): message : see declaration of 'std::runtime_error'
-C:\Users\timon\source\repos\buas_intake\include\SFML\System\Exception.hpp(41): message : see declaration of 'sf::Exception'
-LINK : fatal error LNK1104: cannot open file 'C:\Users\timon\source\repos\buas_intake\Release\buas_intake.exe'
+  Generating code
+  3 of 1238 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    3 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  buas_intake.vcxproj -> C:\Users\timon\source\repos\buas_intake\Release\buas_intake.exe

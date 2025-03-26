@@ -1,5 +1,5 @@
 #include "Collision.h"
-#include "PhysicsMath.h"
+#include "../PhysicsMath.h"
 #include <iostream>
 
 
@@ -56,6 +56,9 @@ namespace Collision {
 			if (bodyB->getShapeType() == ShapeType::Box) {
 				result = findPolygonsContactPoint(bodyA->getTransformedVertices(), bodyB->getTransformedVertices());
 			}
+			else if (bodyB->getShapeType() == ShapeType::Triangle) {
+				result = findPolygonsContactPoint(bodyA->getTransformedVertices(), bodyB->getTransformedVertices());
+			}
 			else if (bodyB->getShapeType() == ShapeType::Circle) {
 				result.contact1 = findCirclePolygonContactPoint(bodyB->getPosition(),bodyB->getRadius(),bodyA->getPosition(),bodyA->getTransformedVertices());
 				result.contactCount = 1;
@@ -66,8 +69,23 @@ namespace Collision {
 				result.contact1 = findCirclePolygonContactPoint(bodyA->getPosition(), bodyA->getRadius(), bodyB->getPosition(), bodyB->getTransformedVertices());
 				result.contactCount = 1;
 			}
+			else if (bodyB->getShapeType() == ShapeType::Triangle) {
+				result = findPolygonsContactPoint(bodyA->getTransformedVertices(), bodyB->getTransformedVertices());
+			}
 			else if (bodyB->getShapeType() == ShapeType::Circle) {
 				result.contact1 = findCirclesContactPoint(bodyA->getPosition(), bodyA->getRadius(), bodyB->getPosition());
+				result.contactCount = 1;
+			}
+		}
+		if (bodyA->getShapeType() == ShapeType::Triangle) {
+			if (bodyB->getShapeType() == ShapeType::Box) {
+				result = findPolygonsContactPoint(bodyA->getTransformedVertices(), bodyB->getTransformedVertices());
+			}
+			else if (bodyB->getShapeType() == ShapeType::Triangle) {
+				result = findPolygonsContactPoint(bodyA->getTransformedVertices(), bodyB->getTransformedVertices());
+			}
+			else if (bodyB->getShapeType() == ShapeType::Circle) {
+				result.contact1 = findCirclePolygonContactPoint(bodyB->getPosition(), bodyB->getRadius(), bodyA->getPosition(), bodyA->getTransformedVertices());
 				result.contactCount = 1;
 			}
 		}
@@ -166,6 +184,9 @@ namespace Collision {
 			if (bodyB->getShapeType() == ShapeType::Box) {
 				return Collision::intersectPolygons(bodyA->getPosition(), bodyA->getTransformedVertices(), bodyB->getPosition(), bodyB->getTransformedVertices());
 			}
+			else if (bodyB->getShapeType() == ShapeType::Triangle) {
+				return Collision::intersectPolygons(bodyA->getPosition(), bodyA->getTransformedVertices(), bodyB->getPosition(), bodyB->getTransformedVertices());
+			}
 			else if (bodyB->getShapeType() == ShapeType::Circle) {
 				result = Collision::intersectCirclePolygon(bodyB->getPosition(), bodyB->getRadius(), bodyA->getPosition(), bodyA->getTransformedVertices());
 
@@ -177,8 +198,25 @@ namespace Collision {
 			if (bodyB->getShapeType() == ShapeType::Box) {
 				return Collision::intersectCirclePolygon(bodyA->getPosition(), bodyA->getRadius(), bodyB->getPosition(), bodyB->getTransformedVertices());
 			}
+			if (bodyB->getShapeType() == ShapeType::Triangle) {
+				return Collision::intersectCirclePolygon(bodyA->getPosition(), bodyA->getRadius(), bodyB->getPosition(), bodyB->getTransformedVertices());
+			}
 			else if (bodyB->getShapeType() == ShapeType::Circle) {
 				return Collision::intersectCircles(bodyA->getPosition(), bodyA->getRadius(), bodyB->getPosition(), bodyB->getRadius());
+			}
+		}
+		else if (bodyA->getShapeType() == ShapeType::Triangle) {
+			if (bodyB->getShapeType() == ShapeType::Box) {
+				return Collision::intersectPolygons(bodyA->getPosition(), bodyA->getTransformedVertices(), bodyB->getPosition(), bodyB->getTransformedVertices());
+			}
+			else if (bodyB->getShapeType() == ShapeType::Triangle) {
+				return Collision::intersectPolygons(bodyA->getPosition(), bodyA->getTransformedVertices(), bodyB->getPosition(), bodyB->getTransformedVertices());
+			}
+			else if (bodyB->getShapeType() == ShapeType::Circle) {
+				result = Collision::intersectCirclePolygon(bodyB->getPosition(), bodyB->getRadius(), bodyA->getPosition(), bodyA->getTransformedVertices());
+
+				result.normal = -result.normal;
+				return result;
 			}
 		}
 		return result;
@@ -258,6 +296,7 @@ namespace Collision {
 		// try to find lowest depth
 		result.depth = INFINITY;
 		result.normal = { 0.f,0.f };
+		
 
 
 		for (unsigned int i{ 0 }; i < verticesA.size(); i++) {
@@ -267,9 +306,11 @@ namespace Collision {
 
 			sf::Vector2f edge = vb - va;
 			sf::Vector2f axis = { -edge.y, edge.x };
+			
 			if (axis != zeroVector)
 				axis = axis.normalized();
 
+			
 			MinMax resultA = projectVertices(verticesA, axis);
 			MinMax resultB = projectVertices(verticesB, axis);
 
@@ -282,6 +323,12 @@ namespace Collision {
 			if (depth < result.depth) {
 				result.depth = depth;
 				result.normal = axis;
+				if (result.normal != sf::Vector2f(0.f, 1.f))
+				{
+					if (result.normal.y == 1.f) {
+						result.normal.x = 0.f;
+					}
+				}
 			}
 		}
 		for (unsigned int i{ 0 }; i < verticesB.size(); i++) {
@@ -305,14 +352,24 @@ namespace Collision {
 			if (depth < result.depth) {
 				result.depth = depth;
 				result.normal = axis;
+				if (result.normal != sf::Vector2f(0.f, 1.f))
+				{
+					if (result.normal.y == 1.f) {
+						result.normal.x = 0.f;
+					}
+				}
 			}
+
 		}
+
 		result.collided = true;
 
 		sf::Vector2f direction = centerB - centerA;
 
 		if (direction.dot(result.normal) < 0.f)
 			result.normal = -result.normal;
+
+		
 
 
 		return result;
