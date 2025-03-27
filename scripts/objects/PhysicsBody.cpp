@@ -57,8 +57,10 @@ PhysicsBody::PhysicsBody(ShapeType type, float radius, float width, float height
 	std::cout << " Ineratia:" << this->ineratia << '\n';
 	std::cout << " Mass:" << this->mass << '\n';
 
+	
+	this->transformUpdateRequired = true;
 	this->aabbUpdateRequired = true;
-
+	
 	// if health was not set
 	if (health == 0.f){
 		this->health = 20 + mass * 50.f;
@@ -229,11 +231,17 @@ void PhysicsBody::rotateTo(float angle)
 
 void PhysicsBody::addLinearVelocity(sf::Vector2f amount)
 {
+	// dont give static body linear velocity might change how other objects interact with it
+	if (isStatic)
+		return;
 	this->linearVelocity += amount;
 }
 
 void PhysicsBody::addAngularVelocity(float value)
 {
+	// dont give static body angular velocity might change how other objects interact with it
+	if (isStatic)
+		return;
 	this->angularVelocity += value;
 }
 

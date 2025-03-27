@@ -88,10 +88,9 @@
   <ItemGroup>
     <ClCompile Include="scripts\loaders\AudioLoader.cpp" />
     <ClCompile Include="scripts\ui\Button.cpp" />
-    <ClCompile Include="scripts\ui\LevelIcon.cpp" />
     <ClCompile Include="scripts\ui\MainMenu.cpp" />
     <ClCompile Include="scripts\loaders\FontLoader.cpp" />
-    <ClCompile Include="scripts\loaders\Level.cpp" />
+    <ClCompile Include="scripts\loaders\LevelLoader.cpp" />
     <ClCompile Include="scripts\loaders\ObjectLoader.cpp" />
     <ClCompile Include="scripts\objects\Catapult.cpp" />
     <ClCompile Include="scripts\collision\Collision.cpp" />
@@ -106,10 +105,9 @@
   <ItemGroup>
     <ClInclude Include="scripts\loaders\AudioLoader.h" />
     <ClInclude Include="scripts\ui\Button.h" />
-    <ClInclude Include="scripts\ui\LevelIcon.h" />
     <ClInclude Include="scripts\ui\MainMenu.h" />
     <ClInclude Include="scripts\loaders\FontLoader.h" />
-    <ClInclude Include="scripts\loaders\Level.h" />
+    <ClInclude Include="scripts\loaders\LevelLoader.h" />
     <ClInclude Include="scripts\objects\Material.h" />
     <ClInclude Include="scripts\loaders\ObjectLoader.h" />
     <ClInclude Include="scripts\objects\Catapult.h" />
@@ -120,18 +118,6 @@
     <ClInclude Include="scripts\PhysicsWorld.h" />
     <ClInclude Include="scripts\Game.h" />
     <ClInclude Include="scripts\loaders\TextureLoader.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="textures\catapult.png" />
-    <Image Include="textures\smiley.png" />
-    <Image Include="textures\blocksmiley.png" />
-    <Image Include="textures\woodbar.png" />
-    <Image Include="textures\woodblock.png" />
-    <Image Include="textures\woodblocks.png" />
-    <Image Include="textures\woodblocks2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="textures\10x1woodbar.aseprite" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\font.otf" />

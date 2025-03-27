@@ -13,8 +13,10 @@ enum class ObjectType {
     stoneStick,
     stoneThickStick,
     stonePillar,
+    stoneBall,
     iceBox,
     iceStick,
+    longIceStick,
     enemy,
 };
 
@@ -36,16 +38,20 @@ namespace ObjectLoader
     PhysicsBody* createEnemy();
 
     PhysicsBody* createWoodBox(bool isStatic);
-    PhysicsBody* createIceBox(bool isStatic);
-
-    PhysicsBody* createTriangle(bool isStatic);
     PhysicsBody* createWoodStick(bool isStatic);
     PhysicsBody* createWoodThickStick(bool isStatic);
-
+    
+    PhysicsBody* createStoneBox(bool isStatic);
     PhysicsBody* createStoneStick(bool isStatic);
     PhysicsBody* createStoneThickStick(bool isStatic);
-
     PhysicsBody* createStonePillar(bool isStatic);
+    PhysicsBody* createStoneBall(bool isStatic);
+
+    PhysicsBody* createIceBox(bool isStatic);
+    PhysicsBody* createIceStick(bool isStatic);
+    PhysicsBody* createLongIceStick(bool isStatic);
+
+    PhysicsBody* createTriangle(bool isStatic);
 
 
 };

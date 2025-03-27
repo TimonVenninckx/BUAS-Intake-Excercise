@@ -1,12 +1,15 @@
 #include "MainMenu.h"
+#include "../loaders/FontLoader.h"
+#include "../loaders/LevelLoader.h"
 
 MainMenu::MainMenu() :
 	headerText {*FontLoader::getFont("angrybirds.ttf")}
 {
 	// setup level UI
-	for (unsigned int i{ 0 }; i < Level::Levels.size(); i++) {
-		LevelIcon icon{ Level::Levels[i], {200.f + (i * 250.f), 200.f} };
-		this->levelsUI.push_back(icon);
+	for (unsigned int i{ 0 }; i < LevelLoader::Levels.size(); i++) {
+		Button button{ std::to_string(LevelLoader::Levels[i].id), sf::Vector2f{150.f,150.f},
+			sf::Vector2f{200.f + (i % 5 * 250.f), 200.f + 200.f * static_cast<float>(i / 5)},70};
+		this->buttons.push_back(button);
 	}
 
 	background = sf::RectangleShape({ 1600.f,900.f });
@@ -20,11 +23,11 @@ MainMenu::MainMenu() :
 	headerText.setOrigin(headerText.getGlobalBounds().size / 2.f);
 }
 
-const Level::LevelInfo* MainMenu::ChooseLevel(sf::Vector2f mousePos) {
+const LevelLoader::LevelInfo* MainMenu::ChooseLevel(sf::Vector2f mousePos) {
 
-	for (LevelIcon& icon : this->levelsUI) {
-		if (icon.contains(mousePos)) {
-			return &icon.levelInfo;
+	for (unsigned int i{ 0 }; i < buttons.size(); i++) {
+		if (buttons[i].contains(mousePos)) {
+			return &LevelLoader::Levels[i];;
 		}
 	}
 	return nullptr;
@@ -33,8 +36,8 @@ const Level::LevelInfo* MainMenu::ChooseLevel(sf::Vector2f mousePos) {
 void MainMenu::draw(sf::RenderWindow& window)
 {
 	window.draw(background);
-	for (LevelIcon& icon : this->levelsUI) {
-		icon.draw(window);
+	for (Button& button: this->buttons) {
+		button.draw(window);
 	}
 	window.draw(headerText);
 }

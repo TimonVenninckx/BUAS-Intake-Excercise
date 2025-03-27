@@ -1,7 +1,7 @@
 #include "Button.h"
 
-Button::Button(std::string text, sf::Vector2f size, sf::Vector2f position, sf::Color color)
-	: buttonText{ *FontLoader::getFont("angrybirds.ttf"),text, 30 }
+Button::Button(std::string text, sf::Vector2f size, sf::Vector2f position, unsigned int fontSize, sf::Color color)
+	: buttonText{ *FontLoader::getFont("angrybirds.ttf"),text, fontSize }
 	, clickSound{ *AudioLoader::getAudio("click.mp3")}
 {
 	backgroundShape = sf::RectangleShape(size);
@@ -11,7 +11,7 @@ Button::Button(std::string text, sf::Vector2f size, sf::Vector2f position, sf::C
 
 	buttonText.setOrigin(buttonText.getGlobalBounds().getCenter());
 	buttonText.setPosition(position);
-	clickSound.setVolume(100.f);
+	clickSound.setVolume(AudioLoader::Volume);
 }
 
 bool Button::contains(sf::Vector2f mousePos)

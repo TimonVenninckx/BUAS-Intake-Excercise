@@ -5,16 +5,13 @@
 #include "loaders/FontLoader.h"
 
 
-const unsigned int PhysicsWorld::minIterations = 1;
-const unsigned int PhysicsWorld::maxIterations = 128;
-
-
 PhysicsWorld::PhysicsWorld(sf::Vector2f worldSize, sf::Vector2f screenSize) 
     : catapult{ sf::Vector2f(worldSize.x * -0.4f,5.f) }, 
     mainMenuButton{ "MainMenu",{160.f,50.f}, {screenSize.x - 105.f, 50.f}},
     catapultPullSound{ *AudioLoader::getAudio("pull string.mp3") },
     woodBreakingSound{ *AudioLoader::getAudio("test.mp3") },
     stoneBreakingSound{ *AudioLoader::getAudio("test.mp3") },
+    iceBreakingSound{ *AudioLoader::getAudio("icebreak.mp3") },
     launchingSound{ *AudioLoader::getAudio("launchsound.mp3") },
     collideSound{ *AudioLoader::getAudio("collide.mp3") },
     enemySound{ *AudioLoader::getAudio("hurt.mp3") },
@@ -23,18 +20,15 @@ PhysicsWorld::PhysicsWorld(sf::Vector2f worldSize, sf::Vector2f screenSize)
     
     this->worldSize = worldSize;
     this->gravity = sf::Vector2f(0.f, -9.81f);
-    this->contactPointsList.setPrimitiveType(sf::PrimitiveType::Triangles);
-    this->contactDirectionList.setPrimitiveType(sf::PrimitiveType::Lines);
 
 
+    // first trail point should be delayed
     this->timeBetweenTrails = .07f;
-    // first trail should be delayed
     this->timeTillNextTrail = timeBetweenTrails * 2.f;
     this->playerNotHitAnytingYet = nullptr;
 
     // SETUP CATAPULT
     reload();
-
 
     // SETUP BACKGROUND
     sf::Texture* backgroundTexture = TextureLoader::LoadTexture("pixels-evening-grass-sun.jpg");
@@ -57,18 +51,19 @@ PhysicsWorld::PhysicsWorld(sf::Vector2f worldSize, sf::Vector2f screenSize)
     this->levelNameText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "LevelName", 50);
     this->levelNameText->setPosition({ screenSize.x / 2.f, 0.f });
 
-    this->youWonText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "You Won", 50);
-    this->youWonText->setPosition({screenSize / 2.f});
-    this->youWonText->setOrigin(youWonText->getGlobalBounds().size / 2.f);
+    this->gameOverText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "You Won", 50);
+    this->gameOverText->setPosition({screenSize / 2.f});
+    this->gameOverText->setOrigin(gameOverText->getGlobalBounds().size / 2.f);
 
 
-    woodBreakingSound.setVolume(30.f);
-    stoneBreakingSound.setVolume(30.f);
-    catapultPullSound.setVolume(30.f);
-    launchingSound.setVolume(30.f);
-    collideSound.setVolume(3.f);
-    enemySound.setVolume(30.f);
-    victorySound.setVolume(30.f);
+    woodBreakingSound.setVolume(AudioLoader::Volume);
+    stoneBreakingSound.setVolume(AudioLoader::Volume);
+    iceBreakingSound.setVolume(AudioLoader::Volume);
+    catapultPullSound.setVolume(AudioLoader::Volume);
+    launchingSound.setVolume(AudioLoader::Volume);
+    collideSound.setVolume(AudioLoader::Volume * 0.1f);
+    enemySound.setVolume(AudioLoader::Volume);
+    victorySound.setVolume(AudioLoader::Volume);
 }
 
 void PhysicsWorld::reload()
@@ -102,7 +97,7 @@ void PhysicsWorld::resetLevel()
     trailList.clear();
     timeTillNextTrail = timeBetweenTrails * 2.f;
     this->playerNotHitAnytingYet = nullptr;
-    wonGame = false;
+    gameOver = false;
 }
 
 PhysicsWorld::~PhysicsWorld()
@@ -201,6 +196,14 @@ bool PhysicsWorld::exitLevel(const std::optional<sf::Event> event, sf::Vector2f 
     return false;
 }
 
+bool PhysicsWorld::activePlayersNotMoving() {
+    for (unsigned int i{ 0 }; i < playerList.size(); i++) {
+        if (playerList[i]->getLinearVelocity().length() > 1.f)
+            return false;
+    }
+    return true;
+}
+
 bool PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
 {
     if (playerNotHitAnytingYet) {
@@ -217,10 +220,18 @@ bool PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
         reload();
     }
 
-    if (!wonGame) {
+    if (!gameOver) {
         if (enemyList.empty()) {
-            wonGame = true;
+            gameOver = true;
             victorySound.play();
+            gameOverText->setString("YOU WON");
+            this->gameOverText->setOrigin(gameOverText->getGlobalBounds().size / 2.f);
+        }
+        else if (playerLives == 0) {
+            if (playerList.empty() || activePlayersNotMoving()) {
+                gameOverText->setString("YOU LOST");
+                this->gameOverText->setOrigin(gameOverText->getGlobalBounds().size / 2.f);
+            }
         }
     }
 
@@ -237,10 +248,6 @@ bool PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
 
 void PhysicsWorld::step(float deltaTime)
 {
-
-    contactPointsList.clear();
-    contactDirectionList.clear();
-
     this->contactPairs.clear();
     this->stepBodies(deltaTime);
     this->broadPhase();
@@ -263,11 +270,6 @@ void PhysicsWorld::draw(sf::RenderWindow& window) {
     for (unsigned int i{ 0 }; i < trailList.size(); i++) {
         window.draw(trailList[i]);
     }
-
-    //debugging
-    window.draw(contactPointsList);
-    window.draw(contactDirectionList);
-
 }
 
 void PhysicsWorld::drawUI(sf::RenderWindow& window) {
@@ -279,14 +281,14 @@ void PhysicsWorld::drawUI(sf::RenderWindow& window) {
     window.draw(playerLivesImage);
     if (playerLivesText)
         window.draw(*playerLivesText);
-    if (youWonText && enemyList.empty())
-        window.draw(*youWonText);
+    if (gameOverText && gameOver)
+        window.draw(*gameOverText);
 
     mainMenuButton.draw(window);
 }
 
+// checking objects against objects of their own type
 void PhysicsWorld::broadPhaseCheckSelf(const std::vector<PhysicsBody*>& list){
-    // checking objects against themselves
     if (list.empty())
         return;
     for (unsigned int i{ 0 }; i < list.size() - 1; i++) {
@@ -310,8 +312,8 @@ void PhysicsWorld::broadPhaseCheckSelf(const std::vector<PhysicsBody*>& list){
         }
     }
 }
+// checking objects against other types of objects
 void PhysicsWorld::broadPhaseCheckVersus(const std::vector<PhysicsBody*>& listA, const std::vector<PhysicsBody*>& listB){
-    // checking objects against themselves
     for (unsigned int i{ 0 }; i < listA.size(); i++) {
         PhysicsBody* bodyA = listA[i];
         if (bodyA->getIsDestroyed())
@@ -352,8 +354,6 @@ void PhysicsWorld::narrowPhase(float delta) {
         PhysicsBody* bodyB = std::get<1>(pair);
 
         Collision::HitResult result{ Collision::collide(bodyA, bodyB) };
-        //std::cout << "Normal:" << result.normal.x << ',' << result.normal.y << '\n';
-
 
         if (result.collided) {
             if (playerNotHitAnytingYet) {
@@ -371,7 +371,6 @@ void PhysicsWorld::narrowPhase(float delta) {
              sf::Vector2f impulseVector = this->resolveCollisionWithRotationAndFriction(contact,delta);
 
             // damage the objects
-
             if (!bodyA->getIsStatic() && !bodyB->getIsStatic()) {
                 if (impulseVector.length() > this->damageThreshold) {
                     collideSound.play();
@@ -383,7 +382,7 @@ void PhysicsWorld::narrowPhase(float delta) {
             }
         }
     }
-    // NOW WE RUN THROUGH ALL BODIES TO CLAMP THEM.
+    // Now we run through all collided bodies and dampen their angular/linear velocity
     while (!bodiesThatCollided.empty())
     {
         dampenVelocity(bodiesThatCollided.back());
@@ -408,6 +407,7 @@ void PhysicsWorld::stepBodies(float time) {
                 switch (body->getMaterialType()) {
                 case MaterialType::Wood: woodBreakingSound.play(); break;
                 case MaterialType::Stone: stoneBreakingSound.play(); break;
+                case MaterialType::Ice: iceBreakingSound.play(); break;
                 }
             }
         }
@@ -438,8 +438,7 @@ void PhysicsWorld::stepBodies(float time) {
             }
         }
     }
-    // update timer on destroyed bodies
-
+    // update timer and fade out destroyed bodies
     for (std::map<PhysicsBody*, float>::iterator it{ destroyedBodyList.begin() }, nextIt = it;  nextIt != destroyedBodyList.end();it = nextIt) {
         nextIt++;
         it->second -= time;
@@ -642,7 +641,7 @@ void PhysicsWorld::dampenVelocity(PhysicsBody* body)
 
 
     // rotational friction
-    float rotationalFrictionCoefficient = 0.0001f;
+    float rotationalFrictionCoefficient = 0.0009f;
     if (body->getAngularVelocity() > 0.f) {
         body->addAngularVelocity(-rotationalFrictionCoefficient);
     }
@@ -657,14 +656,14 @@ void PhysicsWorld::dampenVelocity(PhysicsBody* body)
 
     
     // stop small movement due to innacurate floating point values
-    float linearFrictionCoefficient = 0.002f;
+    float linearFrictionCoefficient = 0.0002f;
     if (body->getLinearVelocity().x > 0.f) {
         body->addLinearVelocity({ -linearFrictionCoefficient,0.f });
     }
     else {
         body->addLinearVelocity({  linearFrictionCoefficient,0.f });
     }
-    // y coordinate
+    // y coordinate 
     if (body->getLinearVelocity().y > 0.f) {
         body->addLinearVelocity({ 0.f,-linearFrictionCoefficient });
     }
@@ -766,5 +765,44 @@ void PhysicsWorld::setPlayerLives(int lives)
 
     // stop small linear movement
     float linearVelocityThreshold = 0.5f;
+    if (std::abs(body->getLinearVelocity().length()) < linearVelocityThreshold) body->addLinearVelocity(-body->getLinearVelocity());
+    
+    
+    
+    
+    // TEMP 2
+    // rotational friction
+    float rotationalFrictionCoefficient = 0.0001f;
+    if (body->getAngularVelocity() > 0.f) {
+        body->addAngularVelocity(-rotationalFrictionCoefficient);
+    }
+    else {
+        body->addAngularVelocity(rotationalFrictionCoefficient);
+    }
+
+    // stop small rotational movement
+    float angularVelocityThreshold = 0.01f;
+    if (std::abs(body->getAngularVelocity()) < angularVelocityThreshold) body->addAngularVelocity(-body->getAngularVelocity());
+
+
+    
+    // stop small movement due to innacurate floating point values
+    float linearFrictionCoefficient = 0.0002f;
+    if (body->getLinearVelocity().x > 0.f) {
+        body->addLinearVelocity({ -linearFrictionCoefficient,0.f });
+    }
+    else {
+        body->addLinearVelocity({  linearFrictionCoefficient,0.f });
+    }
+    // y coordinate 
+    if (body->getLinearVelocity().y > 0.f) {
+        body->addLinearVelocity({ 0.f,-linearFrictionCoefficient });
+    }
+    else {
+        body->addLinearVelocity({ 0.f,linearFrictionCoefficient });
+    }
+
+    // stop small linear movement
+    float linearVelocityThreshold = 0.3f;
     if (std::abs(body->getLinearVelocity().length()) < linearVelocityThreshold) body->addLinearVelocity(-body->getLinearVelocity());
     */

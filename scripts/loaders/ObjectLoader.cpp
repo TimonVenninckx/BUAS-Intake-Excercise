@@ -13,13 +13,15 @@ namespace ObjectLoader {
         case ObjectType::woodStick:     body = createWoodStick(info.isStatic); break;
         case ObjectType::woodThickStick:body = createWoodThickStick(info.isStatic); break;
 
-        case ObjectType::stoneBox:      body = createWoodBox(info.isStatic); break;
+        case ObjectType::stoneBox:      body = createStoneBox(info.isStatic); break;
         case ObjectType::stoneStick:    body = createStoneStick(info.isStatic); break;
         case ObjectType::stoneThickStick:body =createStoneThickStick(info.isStatic); break;
         case ObjectType::stonePillar:   body = createStonePillar(info.isStatic); break;
+        case ObjectType::stoneBall:     body = createStoneBall(info.isStatic); break;
 
         case ObjectType::iceBox:        body = createIceBox(info.isStatic);  break;
-        case ObjectType::iceStick:      body = createWoodStick(info.isStatic); break;
+        case ObjectType::iceStick:      body = createIceStick(info.isStatic); break;
+        case ObjectType::longIceStick:  body = createLongIceStick (info.isStatic); break;
         case ObjectType::enemy:         body = createEnemy();      break;
         }
         if (body == nullptr) {
@@ -47,7 +49,7 @@ namespace ObjectLoader {
 
 
     PhysicsBody* createWoodBox(bool isStatic) {
-        std::cout << "Create Box\n";
+        std::cout << "Create wood Box\n";
         PhysicsBody* body = new PhysicsBody(ShapeType::Box, 0.f, 4.f, 4.f, isStatic, MaterialType::Wood);
         body->setTexture(TextureLoader::LoadTexture("4x4woodblock.png"), 4);
         return body;
@@ -66,7 +68,12 @@ namespace ObjectLoader {
         return body;
     }
 
-
+    PhysicsBody* createStoneBox(bool isStatic) {
+        std::cout << "Create stone Box\n";
+        PhysicsBody* body = new PhysicsBody(ShapeType::Box, 0.f, 4.f, 4.f, isStatic, MaterialType::Wood);
+        body->setTexture(TextureLoader::LoadTexture("4x4stoneblock.png"), 4);
+        return body;
+    }
     PhysicsBody* createStoneStick(bool isStatic) {
         std::cout << "Create 10x1 stoneBar\n";
         PhysicsBody* body = new PhysicsBody(ShapeType::Box, 0.f, 10.0f, 1.f, isStatic, MaterialType::Stone);
@@ -87,13 +94,37 @@ namespace ObjectLoader {
         return body;
     }
 
+    PhysicsBody* createStoneBall(bool isStatic)
+    {
+        std::cout << "Create stone Ball\n";
+        PhysicsBody* body = new PhysicsBody(ShapeType::Circle, 2.f, 0.f, 0.f, isStatic, MaterialType::Stone);
+        body->setTexture(TextureLoader::LoadTexture("stoneball.png"), 4);
+        return body;
+    }
+
+
     // give ice certain health values
     PhysicsBody* createIceBox(bool isStatic) {
-        std::cout << "Create Box\n";
-        PhysicsBody* body = new PhysicsBody(ShapeType::Box, 0.f, 4.f, 4.f, isStatic, MaterialType::Ice, 10.f);
+        std::cout << "Create ice Box\n";
+        PhysicsBody* body = new PhysicsBody(ShapeType::Box, 0.f, 4.f, 4.f, isStatic, MaterialType::Ice,40.f);
         body->setTexture(TextureLoader::LoadTexture("4x4iceblock.png"), 4);
         return body;
     }
+    PhysicsBody* createIceStick(bool isStatic) {
+        std::cout << "Create 10x1 icebar\n";
+        PhysicsBody* body = new PhysicsBody(ShapeType::Box, 0.f, 10.0f, 1.f, isStatic, MaterialType::Ice,30.f);
+        body->setTexture(TextureLoader::LoadTexture("10x1icebar.png"), 4);
+        return body;
+    }
+    PhysicsBody* createLongIceStick(bool isStatic) {
+        std::cout << "Create 20x2 icebar\n";
+        PhysicsBody* body = new PhysicsBody(ShapeType::Box, 0.f, 20.0f, 2.f, isStatic, MaterialType::Ice, 30.f);
+        body->setTexture(TextureLoader::LoadTexture("10x1icebar.png"), 4);
+        return body;
+    }
+
+
+
     PhysicsBody* createTriangle(bool isStatic) {
         std::cout << "Create Triangle\n";
         PhysicsBody* body = new PhysicsBody(ShapeType::Triangle, 0.f, 4.f, 4.f, isStatic, MaterialType::Wood);

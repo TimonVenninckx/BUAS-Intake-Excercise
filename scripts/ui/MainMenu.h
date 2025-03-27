@@ -1,17 +1,17 @@
 #pragma once
-#include "LevelIcon.h"
+#include "../loaders/LevelLoader.h"
 
 class MainMenu
 {
 public:
 	MainMenu();
 
-	const Level::LevelInfo* ChooseLevel(sf::Vector2f mousePos);
+	const LevelLoader::LevelInfo* ChooseLevel(sf::Vector2f mousePos);
 	void draw(sf::RenderWindow& window);
 
 private:
 	sf::RectangleShape background;
-	std::vector<LevelIcon> levelsUI;
+	std::vector<Button> buttons;
 	sf::Text headerText;
 };
 

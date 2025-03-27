@@ -5,7 +5,7 @@
 #include "collision/Collision.h"
 #include "PhysicsMath.h"
 #include "ui/MainMenu.h"
-#include "loaders/Level.h"
+#include "loaders/LevelLoader.h"
 #include "loaders/TextureLoader.h"
 
 
@@ -22,6 +22,7 @@ private:
 	void update(float delta);
 	void draw();
 
+	sf::Music music;
 	sf::RenderWindow window{};
 
 	sf::Vector2f viewSize{};
@@ -33,7 +34,6 @@ private:
 	MainMenu mainMenu;
 
 	PhysicsWorld world;
-	std::vector<sf::Color> colors;
 	sf::Clock clock;
 
 	sf::Text* frameCounterText;

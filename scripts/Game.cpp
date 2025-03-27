@@ -2,18 +2,25 @@
 #include <iostream>
 #include <sstream>
 #include "loaders/FontLoader.h"
+#include "loaders/AudioLoader.h"
 
 #define DebuggingNot
-    
+
+const float AudioLoader::Volume = 30.f;
+
+
 // we do (1 / timebetweenPhysicsStep) physics update every second
 constexpr float timeBetweenPhysicsStep = 0.001f;
-                    // worldsize  ,  screensize
-Game::Game() :world{ {192.f,108.f},{ 1600.f, 900.f } }
+
+constexpr sf::Vector2f worldSize{ 192.f,108.f };
+constexpr sf::Vector2f screenSize{ 1600.f, 900.f };
+
+Game::Game() :world{ worldSize,{ 1600.f, 900.f } }
 {
     // set in constructor aswell
-    viewSize = { 192.f, 108.f };
+    viewSize = worldSize;
 
-    window = sf::RenderWindow(sf::VideoMode({ 1600, 900 }), "Buas Intake!");
+    window = sf::RenderWindow(sf::VideoMode(sf::Vector2u(screenSize)), "Angry Faces");
 
     window.setPosition({ 10, 40 });
 
@@ -22,19 +29,22 @@ Game::Game() :world{ {192.f,108.f},{ 1600.f, 900.f } }
 
     window.setView(view);
 
-    // SETUP TEXT
+    // SETUP Framerate text
     frameCounterText = new sf::Text(*FontLoader::getFont("font.otf"), "FrameCounter", 30);
     frameCounterText->setPosition({ uiView.getSize().x, 0.f });
     frameCounterText->setStyle(sf::Text::Bold);
     frameCounterText->setFillColor(sf::Color::Red);
     frameCounterText->setOrigin({ frameCounterText->getLocalBounds().size.x , 0.f });
     
-    //window.setFramerateLimit(60);
-
     clock.restart();
 
     this->window.setVerticalSyncEnabled(true);
-    //this->window.setFramerateLimit(30);
+
+    if (music.openFromFile("sounds/music.mp3")) {
+        music.setLooping(true);
+        music.setVolume(AudioLoader::Volume * 1.3f);
+        music.play();
+    }
 
     while (window.isOpen())
     {
@@ -55,8 +65,6 @@ Game::Game() :world{ {192.f,108.f},{ 1600.f, 900.f } }
 
 void Game::update(float delta)
 {
-    //constexpr int iterations = 128;
-
     // update mous position 
     sf::Vector2i pixelPos;
     sf::Vector2f mouseLocation;
@@ -81,9 +89,9 @@ void Game::update(float delta)
         else { // IF WE ARE NOT IN A LEVEL
             if (const sf::Event::MouseButtonReleased* mouseButtonReleased = event->getIf<sf::Event::MouseButtonReleased>()) { // mouse button pressed
                 if (mouseButtonReleased->button == sf::Mouse::Button::Left) {
-                    if (const Level::LevelInfo* info = this->mainMenu.ChooseLevel(mouseLocationInUI)) {
+                    if (const LevelLoader::LevelInfo* info = this->mainMenu.ChooseLevel(mouseLocationInUI)) {
                         std::cout << "WE CHOSE A LEVEL\n";
-                        Level::LoadLevel(world, *info, viewSize);
+                        LevelLoader::LoadLevel(world, *info, viewSize);
                         inLevel = true;
                     }
                 }

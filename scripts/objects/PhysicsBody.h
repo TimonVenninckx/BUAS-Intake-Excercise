@@ -30,8 +30,8 @@ public:
 	void damage(float amount);
 	void setOpacity(int opacity);
 
-	virtual void draw(sf::RenderWindow& window);
-	virtual void step(float time,sf::Vector2f gravity);
+	void draw(sf::RenderWindow& window);
+	void step(float time,sf::Vector2f gravity);
 
 	void move(sf::Vector2f amount);
 	void moveTo(sf::Vector2f position);

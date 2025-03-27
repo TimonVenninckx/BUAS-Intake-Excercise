@@ -279,9 +279,7 @@ namespace Collision {
 			result.normal = axis;
 		}
 
-
 		sf::Vector2f direction = polygonCenter - circleCenter;
-		//std::cout << "Direction:" << direction.x << "," << direction.y << '\n';
 
 		if (direction.dot(result.normal) < 0.f)
 			result.normal = -result.normal;
@@ -377,7 +375,7 @@ namespace Collision {
 
 	int findClosestPointOnPolygon(sf::Vector2f circleCenter, const std::vector<sf::Vector2f>& vertices)
 	{
-		int result = -1;
+		int result = 0;
 		float minDistance = INFINITY;
 
 		for (unsigned int i{ 0 }; i < vertices.size(); i++) {
@@ -447,7 +445,7 @@ namespace Collision {
 
 		result.collided = true;
 		result.normal = sf::Vector2f(centerB - centerA);
-		// .normalized() on a 0,0 vector gives an exception
+		// .normalized() on a 0,0 vector throws an exception
 		if (result.normal != zeroVector)
 			result.normal = result.normal.normalized();
 

@@ -1,4 +1,5 @@
 #include "Material.h"
+#include <iostream>
 
 namespace Materials {
 
@@ -9,37 +10,37 @@ namespace Materials {
 	// static friction
 	const Material Wood{
 		0.4f,
-		0.4f,
+		0.2f,
 		0.4f,
 		0.6f
 	};
 
 	const Material Stone{
 		0.6f,
-		0.4f,
+		0.2f,
 		0.4f,
 		0.6f
 	};
 
 	const Material Ice{
 		0.4f,
-		1.0f,
-		1.0f,
-		1.0f
+		0.2f,
+		0.7f,
+		0.9f
 	};
 
 	const Material Player{
 		0.6f,
 		0.4f,
-		0.7f,
-		1.0f
+		0.4f,
+		0.6f
 	};
 
 	const Material Enemy{
 		0.4f,
 		0.4f,
-		1.0f,
-		1.0f
+		0.4f,
+		0.6f
 	};
 
 	const Material Ground{
@@ -57,6 +58,7 @@ namespace Materials {
 		case MaterialType::Player: return Player;
 		case MaterialType::Enemy: return Enemy;
 		case MaterialType::Ground: return Ground;
+		default: std::cout << "Default Material used for Body Creation\n"; return Ground;
 		}
 	}
 

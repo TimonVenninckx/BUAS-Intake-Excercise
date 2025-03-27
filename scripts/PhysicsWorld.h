@@ -10,9 +10,6 @@ class PhysicsWorld
 {
 public:
 
-	static const unsigned int minIterations;
-	static const unsigned int maxIterations;
-
 
 	PhysicsWorld(sf::Vector2f worldsize, sf::Vector2f screenSize);
 	~PhysicsWorld();
@@ -21,7 +18,7 @@ public:
 	bool removeBody(PhysicsBody* body);
 	void addEnemy(PhysicsBody* body);
 
-	// event handling, mouseclick button click also used to quit the level
+	// event handling and also used to quit the level
 	bool exitLevel(const std::optional<sf::Event> event, sf::Vector2f mouseLocation, sf::Vector2f mouseLocationInUI);
 	// update
 	bool update(float delta, sf::Vector2f mouseLocation);
@@ -36,6 +33,8 @@ public:
 	void setPlayerLives(int lives);;
 
 private:
+
+	bool activePlayersNotMoving();
 
 	void reload();
 	void resetLevel();
@@ -56,7 +55,7 @@ private:
 
 	void dampenVelocity(PhysicsBody* body);
 
-	bool wonGame{ false };
+	bool gameOver{ false };
 
 	Button mainMenuButton;
 	
@@ -65,12 +64,13 @@ private:
 	sf::Text* playerLivesText{};
 	sf::Text* scoreText{};
 	sf::Text* levelNameText{};
-	sf::Text* youWonText{};
+	sf::Text* gameOverText{};
 	int score{};
 
 	sf::Sound catapultPullSound;
 	sf::Sound woodBreakingSound;
 	sf::Sound stoneBreakingSound;
+	sf::Sound iceBreakingSound;
 	sf::Sound launchingSound;
 	sf::Sound collideSound;
 	sf::Sound enemySound;
@@ -100,13 +100,8 @@ private:
 	// time till destruction
 	// destroyed bodies which are slowly fading out
 	std::map<PhysicsBody*,float> destroyedBodyList;
-
 	std::vector<std::tuple<PhysicsBody*, PhysicsBody*>> contactPairs;
 
-
-	// debugging
-	sf::VertexArray contactPointsList;
-	sf::VertexArray contactDirectionList;
 
 };
 
