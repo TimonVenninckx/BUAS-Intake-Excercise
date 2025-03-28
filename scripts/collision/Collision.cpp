@@ -6,7 +6,8 @@
 
 namespace Collision {
 
-
+	// for comparing points
+	// to see which point is closest
 	struct PointSegment {
 		float distanceSquared{};
 		sf::Vector2f cp{};
@@ -222,6 +223,7 @@ namespace Collision {
 		return result;
 	}
 
+	// check for collision between circle and polygon
 	HitResult intersectCirclePolygon(sf::Vector2f circleCenter, float circleRadius, sf::Vector2f polygonCenter, const std::vector<sf::Vector2f>& vertices)
 	{
 		HitResult result;
@@ -287,7 +289,7 @@ namespace Collision {
 		return result;
 	}
 
-
+	// check for collision between polygons
 	HitResult intersectPolygons(sf::Vector2f centerA, const std::vector<sf::Vector2f>& verticesA, sf::Vector2f centerB, const std::vector<sf::Vector2f>& verticesB)
 	{
 		HitResult result;
@@ -392,7 +394,8 @@ namespace Collision {
 
 
 	
-
+	// project vertices on an axis
+	// used for sat collision check
 	MinMax projectVertices(const std::vector<sf::Vector2f>& vertices, sf::Vector2f axis)
 	{
 		MinMax result{};
@@ -411,6 +414,7 @@ namespace Collision {
 		return result;
 	}
 
+	// project circle min and max on an axis ( in a direction)
 	MinMax projectCircle(sf::Vector2f center, float radius, sf::Vector2f axis)
 	{
 		MinMax result{};
@@ -432,8 +436,7 @@ namespace Collision {
 		return result;
 	}
 
-
-
+	// check for collision circle against circle
 	HitResult intersectCircles(sf::Vector2f centerA, float radiusA, sf::Vector2f centerB, float radiusB)
 	{
 		HitResult result;

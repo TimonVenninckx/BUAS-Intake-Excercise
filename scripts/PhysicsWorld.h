@@ -5,6 +5,7 @@
 #include "objects/Catapult.h"
 #include "ui/Button.h"
 #include "loaders/AudioLoader.h"
+#include "ui/GameOverUI.h"
 
 class PhysicsWorld
 {
@@ -21,14 +22,14 @@ public:
 	// event handling and also used to quit the level
 	bool exitLevel(const std::optional<sf::Event> event, sf::Vector2f mouseLocation, sf::Vector2f mouseLocationInUI);
 	// update
-	bool update(float delta, sf::Vector2f mouseLocation);
+	void update(float delta, sf::Vector2f mouseLocation);
 	// physics step
 	void step(float delta);
 	void draw(sf::RenderWindow& window);
 	void drawUI(sf::RenderWindow& window);
 	
 
-	void setLevelName(const std::string& name);
+	void setLevelNameAndId(const std::string& name, unsigned int id);
 
 	void setPlayerLives(int lives);;
 
@@ -55,8 +56,10 @@ private:
 
 	void dampenVelocity(PhysicsBody* body);
 
+	unsigned int levelId;
 	bool gameOver{ false };
 
+	GameOverUI gameOverMenu;
 	Button mainMenuButton;
 	
 	int playerLives{3};
@@ -64,7 +67,6 @@ private:
 	sf::Text* playerLivesText{};
 	sf::Text* scoreText{};
 	sf::Text* levelNameText{};
-	sf::Text* gameOverText{};
 	int score{};
 
 	sf::Sound catapultPullSound;

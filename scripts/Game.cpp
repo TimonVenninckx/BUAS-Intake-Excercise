@@ -9,8 +9,9 @@
 const float AudioLoader::Volume = 30.f;
 
 
-// we do (1 / timebetweenPhysicsStep) physics update every second
+// we do (1 / timebetweenPhysicsStep) physics updates every second
 constexpr float timeBetweenPhysicsStep = 0.001f;
+
 
 constexpr sf::Vector2f worldSize{ 192.f,108.f };
 constexpr sf::Vector2f screenSize{ 1600.f, 900.f };
@@ -21,8 +22,6 @@ Game::Game() :world{ worldSize,{ 1600.f, 900.f } }
     viewSize = worldSize;
 
     window = sf::RenderWindow(sf::VideoMode(sf::Vector2u(screenSize)), "Angry Faces");
-
-    window.setPosition({ 10, 40 });
 
     view = sf::View({ 0.f , viewSize.y * 0.5f }, { viewSize.x, -viewSize.y });
     uiView = sf::View(static_cast<sf::Vector2f>(window.getSize()) / 2.f, static_cast<sf::Vector2f>(window.getSize()));
@@ -37,19 +36,22 @@ Game::Game() :world{ worldSize,{ 1600.f, 900.f } }
     frameCounterText->setOrigin({ frameCounterText->getLocalBounds().size.x , 0.f });
     
     clock.restart();
-
+    // vsync
     this->window.setVerticalSyncEnabled(true);
 
+    // starting the music
     if (music.openFromFile("sounds/music.mp3")) {
         music.setLooping(true);
         music.setVolume(AudioLoader::Volume * 1.3f);
         music.play();
     }
 
+    // gameloop
     while (window.isOpen())
     {
         try {
             float delta = clock.restart().asSeconds();
+            // dont get large instant updates if we move the window or the screen is hanging
             if(delta < 0.1f)
                 update(delta );
             draw();
@@ -65,7 +67,7 @@ Game::Game() :world{ worldSize,{ 1600.f, 900.f } }
 
 void Game::update(float delta)
 {
-    // update mous position 
+    // update mouse positions 
     sf::Vector2i pixelPos;
     sf::Vector2f mouseLocation;
     sf::Vector2f mouseLocationInUI;
@@ -73,10 +75,11 @@ void Game::update(float delta)
     mouseLocation = window.mapPixelToCoords(pixelPos, view);
     mouseLocationInUI = window.mapPixelToCoords(pixelPos, uiView);
 
+    // level update
     if (inLevel)
         this->world.update(delta, mouseLocation);
 
-
+    // update inputs
     while (const std::optional<sf::Event> event = window.pollEvent())
     {
         if (event->is<sf::Event::Closed>())
@@ -99,6 +102,8 @@ void Game::update(float delta)
         }
     }
 
+    // internal physics timer
+    // limit physics to some amount of times per frame
     acumulatedPhysicsDelta += delta;
     while (acumulatedPhysicsDelta >= timeBetweenPhysicsStep) {
         acumulatedPhysicsDelta -= timeBetweenPhysicsStep;
@@ -111,9 +116,8 @@ void Game::update(float delta)
     frameCounterText->setOrigin({ frameCounterText->getLocalBounds().size.x , 0.f });
 }
 
-// internal physics timer
-// limit physics to certain amount of times per frame
 
+// drawing everything
 void Game::draw()
 {
     window.clear();
@@ -139,7 +143,8 @@ void Game::draw()
 
 Game::~Game()
 {
-    
+    // deletion of heap memory   
+    // also deleting all fonts/textures/sounds that were alocated by namespace
     delete frameCounterText;
 
     auto& textures = TextureLoader::textures;
@@ -159,10 +164,8 @@ Game::~Game()
 
     auto& sounds = AudioLoader::allSounds;
     while (!sounds.empty()) {
-        std::cout << "Unloaded Font\n";
+        std::cout << "Unloaded Sound\n";
         delete sounds.begin()->second;
         fonts.erase(sounds.begin()->first);
     }
-
-
 }

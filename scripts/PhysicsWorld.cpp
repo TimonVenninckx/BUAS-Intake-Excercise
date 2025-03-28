@@ -3,19 +3,21 @@
 #include "PhysicsMath.h"
 #include "loaders/TextureLoader.h"
 #include "loaders/FontLoader.h"
+#include "loaders/LevelLoader.h"
 
 
-PhysicsWorld::PhysicsWorld(sf::Vector2f worldSize, sf::Vector2f screenSize) 
-    : catapult{ sf::Vector2f(worldSize.x * -0.4f,5.f) }, 
-    mainMenuButton{ "MainMenu",{160.f,50.f}, {screenSize.x - 105.f, 50.f}},
-    catapultPullSound{ *AudioLoader::getAudio("pull string.mp3") },
-    woodBreakingSound{ *AudioLoader::getAudio("test.mp3") },
-    stoneBreakingSound{ *AudioLoader::getAudio("test.mp3") },
-    iceBreakingSound{ *AudioLoader::getAudio("icebreak.mp3") },
-    launchingSound{ *AudioLoader::getAudio("launchsound.mp3") },
-    collideSound{ *AudioLoader::getAudio("collide.mp3") },
-    enemySound{ *AudioLoader::getAudio("hurt.mp3") },
-    victorySound{ *AudioLoader::getAudio("victory.mp3") }
+PhysicsWorld::PhysicsWorld(sf::Vector2f worldSize, sf::Vector2f screenSize)
+    : catapult{ sf::Vector2f(worldSize.x * -0.4f,5.f) }
+    , mainMenuButton{ "MainMenu",{160.f,50.f}, {screenSize.x - 105.f, 50.f} }
+    , catapultPullSound{ *AudioLoader::getAudio("pull string.mp3") }
+    , woodBreakingSound{ *AudioLoader::getAudio("test.mp3") }
+    , stoneBreakingSound{ *AudioLoader::getAudio("test.mp3") }
+    , iceBreakingSound{ *AudioLoader::getAudio("icebreak.mp3") }
+    , launchingSound{ *AudioLoader::getAudio("launchsound.mp3") }
+    , collideSound{ *AudioLoader::getAudio("collide.mp3") }
+    , enemySound{ *AudioLoader::getAudio("hurt.mp3") }
+    , victorySound{ *AudioLoader::getAudio("victory.mp3") }
+    , gameOverMenu{ screenSize }
 {
     
     this->worldSize = worldSize;
@@ -51,19 +53,15 @@ PhysicsWorld::PhysicsWorld(sf::Vector2f worldSize, sf::Vector2f screenSize)
     this->levelNameText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "LevelName", 50);
     this->levelNameText->setPosition({ screenSize.x / 2.f, 0.f });
 
-    this->gameOverText = new sf::Text(*FontLoader::getFont("angrybirds.ttf"), "You Won", 50);
-    this->gameOverText->setPosition({screenSize / 2.f});
-    this->gameOverText->setOrigin(gameOverText->getGlobalBounds().size / 2.f);
 
-
-    woodBreakingSound.setVolume(AudioLoader::Volume);
-    stoneBreakingSound.setVolume(AudioLoader::Volume);
-    iceBreakingSound.setVolume(AudioLoader::Volume);
-    catapultPullSound.setVolume(AudioLoader::Volume);
-    launchingSound.setVolume(AudioLoader::Volume);
-    collideSound.setVolume(AudioLoader::Volume * 0.1f);
-    enemySound.setVolume(AudioLoader::Volume);
-    victorySound.setVolume(AudioLoader::Volume);
+    this->woodBreakingSound.setVolume(AudioLoader::Volume);
+    this->stoneBreakingSound.setVolume(AudioLoader::Volume);
+    this->iceBreakingSound.setVolume(AudioLoader::Volume);
+    this->catapultPullSound.setVolume(AudioLoader::Volume);
+    this->launchingSound.setVolume(AudioLoader::Volume);
+    this->collideSound.setVolume(AudioLoader::Volume * 0.1f);
+    this->enemySound.setVolume(AudioLoader::Volume);
+    this->victorySound.setVolume(AudioLoader::Volume);
 }
 
 void PhysicsWorld::reload()
@@ -169,7 +167,23 @@ bool PhysicsWorld::exitLevel(const std::optional<sf::Event> event, sf::Vector2f 
     else if (const sf::Event::MouseButtonPressed* mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>()) { // mouse button pressed
        
         if (mouseButtonPressed->button == sf::Mouse::Button::Left) {
-           if (catapult.contains(mouseLocation)) {
+           if (gameOver) {
+               if (gameOverMenu.mainMenuButtonClicked(mouseLocationInUI)) {
+                   resetLevel();
+                   return true;
+               }
+               else if (gameOverMenu.nextRetryButtonClicked(mouseLocationInUI)) {
+                   if (enemyList.empty()) {
+                       resetLevel();
+                       LevelLoader::LoadLevel(*this, LevelLoader::Levels[this->levelId % LevelLoader::Levels.size()], worldSize);
+                   }
+                   else {                                       
+                       resetLevel();                                    // level id should always be > 0
+                       LevelLoader::LoadLevel(*this, LevelLoader::Levels[(this->levelId - 1) % LevelLoader::Levels.size()], worldSize);
+                   }
+               }
+           }
+           else if (catapult.contains(mouseLocation)) {
                holdingCatapult = true;
                catapultPullSound.play();
            }
@@ -185,7 +199,7 @@ bool PhysicsWorld::exitLevel(const std::optional<sf::Event> event, sf::Vector2f 
                 setPlayerLives(playerLives - 1);
                 playerNotHitAnytingYet = catapult.release();
                 launchingSound.play();
-                this->playerList.push_back(playerNotHitAnytingYet);
+                playerList.push_back(playerNotHitAnytingYet);
                 holdingCatapult = false;
                 trailList.clear();
             }
@@ -204,7 +218,7 @@ bool PhysicsWorld::activePlayersNotMoving() {
     return true;
 }
 
-bool PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
+void PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
 {
     if (playerNotHitAnytingYet) {
         timeTillNextTrail -= delta;
@@ -224,16 +238,17 @@ bool PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
         if (enemyList.empty()) {
             gameOver = true;
             victorySound.play();
-            gameOverText->setString("YOU WON");
-            this->gameOverText->setOrigin(gameOverText->getGlobalBounds().size / 2.f);
+            gameOverMenu.setValues(true, this->score);
         }
         else if (playerLives == 0) {
             if (playerList.empty() || activePlayersNotMoving()) {
-                gameOverText->setString("YOU LOST");
-                this->gameOverText->setOrigin(gameOverText->getGlobalBounds().size / 2.f);
+                gameOver = true;
+                gameOverMenu.setValues(false, this->score);
             }
         }
     }
+    else
+        gameOverMenu.update(delta);
 
     scoreText->setString("Score: " + std::to_string(score));
 
@@ -242,7 +257,6 @@ bool PhysicsWorld::update(float delta, sf::Vector2f mouseLocation)
     if (holdingCatapult)
         catapult.update(mouseLocation);
 
-    return true;
 }
 
 
@@ -273,18 +287,16 @@ void PhysicsWorld::draw(sf::RenderWindow& window) {
 }
 
 void PhysicsWorld::drawUI(sf::RenderWindow& window) {
-    if(scoreText)
-        window.draw(*scoreText);
-    if (levelNameText)
-        window.draw(*levelNameText);
 
+    window.draw(*scoreText);
+    window.draw(*levelNameText);
     window.draw(playerLivesImage);
-    if (playerLivesText)
-        window.draw(*playerLivesText);
-    if (gameOverText && gameOver)
-        window.draw(*gameOverText);
+    window.draw(*playerLivesText);
 
-    mainMenuButton.draw(window);
+    if (gameOver)
+        gameOverMenu.draw(window);
+    else
+        mainMenuButton.draw(window);
 }
 
 // checking objects against objects of their own type
@@ -716,10 +728,11 @@ void PhysicsWorld::checkOutOfBounds()
         }
     }
 }
-void PhysicsWorld::setLevelName(const std::string& name)
+void PhysicsWorld::setLevelNameAndId(const std::string& name, unsigned int id)
 {
-    levelNameText->setString(name);
-    levelNameText->setOrigin({ levelNameText->getGlobalBounds().size.x / 2.f, 0.f });
+    this->levelId = id;
+    this->levelNameText->setString(name);
+    this->levelNameText->setOrigin({ levelNameText->getGlobalBounds().size.x / 2.f, 0.f });
 }
 
 void PhysicsWorld::setPlayerLives(int lives)

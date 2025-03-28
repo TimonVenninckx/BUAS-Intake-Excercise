@@ -104,7 +104,7 @@ void LevelLoader::LoadLevel(PhysicsWorld& world, const LevelInfo& level, sf::Vec
 	}
 
 	// TODO
-	world.setLevelName(level.name);
+	world.setLevelNameAndId(level.name,level.id);
 	world.setPlayerLives(level.playerLives);
 
 }

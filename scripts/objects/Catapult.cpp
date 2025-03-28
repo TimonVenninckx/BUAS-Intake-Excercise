@@ -33,7 +33,6 @@ Catapult::~Catapult()
     }
 }
 
-
 void Catapult::load(PhysicsBody* body)
 {
     this->launchingObject = body;
@@ -79,7 +78,8 @@ bool Catapult::contains(sf::Vector2f mousePosition)
     return true;
 }
 
-PhysicsBody* Catapult::release()
+// if we discard this function we get a memory leak :(
+[[nodiscard]]PhysicsBody* Catapult::release()
 {
     if (launchingObject == nullptr)
         return nullptr;

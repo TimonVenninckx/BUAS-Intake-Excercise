@@ -60,6 +60,9 @@
     <ClCompile Include="scripts\loaders\AudioLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scripts\ui\GameOverUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="scripts\Game.h">
@@ -105,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\loaders\AudioLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\ui\GameOverUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

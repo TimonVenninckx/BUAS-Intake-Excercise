@@ -1,5 +1,7 @@
 #include "ObjectLoader.h"
 
+// stoneThickStick and some others won't work with damage sprit loading
+// because i didn't make specific sprites for them
 
 namespace ObjectLoader {
 

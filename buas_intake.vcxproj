@@ -86,6 +86,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="scripts\ui\GameOverUI.cpp" />
     <ClCompile Include="scripts\loaders\AudioLoader.cpp" />
     <ClCompile Include="scripts\ui\Button.cpp" />
     <ClCompile Include="scripts\ui\MainMenu.cpp" />
@@ -103,6 +104,7 @@
     <ClCompile Include="scripts\loaders\TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="scripts\ui\GameOverUI.h" />
     <ClInclude Include="scripts\loaders\AudioLoader.h" />
     <ClInclude Include="scripts\ui\Button.h" />
     <ClInclude Include="scripts\ui\MainMenu.h" />
