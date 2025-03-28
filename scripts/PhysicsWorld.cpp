@@ -212,7 +212,7 @@ bool PhysicsWorld::exitLevel(const std::optional<sf::Event> event, sf::Vector2f 
 
 bool PhysicsWorld::activePlayersNotMoving() {
     for (unsigned int i{ 0 }; i < playerList.size(); i++) {
-        if (playerList[i]->getLinearVelocity().length() > 1.f)
+        if (playerList[i]->getLinearVelocity().length() > .5f || playerList[i]->getAngularVelocity() > 0.4f)
             return false;
     }
     return true;
